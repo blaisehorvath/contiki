@@ -37,6 +37,12 @@
  *         Adam Dunkels <adam@sics.se>
  */
 
+#define ROM_BOOTLOADER_ENABLE                 1
+#define BOOTLOADER_ENABLE = 0xC5`
+#define BL_LEVEL = 0x00`
+#define BL_PIN_NUMBER = 0x0B` 
+#define BL_ENABLE = 0xC5`
+
 #include "contiki.h"
 
 #include <stdio.h> /* For printf() */
@@ -49,7 +55,8 @@ PROCESS_THREAD(hello_world_process, ev, data)
   PROCESS_BEGIN();
 
   printf("Hello, world\n");
-  
+  printf("Enabling entering bootloader mode with BTN1+Reset BTN!\n");
+
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
