@@ -49,7 +49,9 @@
 #include <stdbool.h>
 #include "ti-lib.h"
 #include "i2c.h"
+#include "board-i2c.h"
 
+<<<<<<< HEAD
 
 #include <inc/hw_memmap.h>
 //
@@ -71,6 +73,16 @@
 //static uint32_t i2c_base = 0x40002000;
 //static uint32_t i2c_clk = 400000;
 //static uint8_t bme280_addr = 0x76;
+=======
+#define BOARD_IOID_SDA            IOID_5 /**< Interface 0 SDA: All sensors bar MPU */
+#define BOARD_IOID_SCL            IOID_6 /**< Interface 0 SCL: All sensors bar MPU */
+#define BOARD_IOID_SDA_HP         IOID_8 /**< Interface 1 SDA: MPU */
+#define BOARD_IOID_SCL_HP         IOID_9 /**< Interface 1 SCL: MPU */
+static uint32_t i2c_base = 0x40002000;
+static uint8_t bme280_addr = 0x76;
+>>>>>>> 0bb7fe8bc5393fb9b34a68205fd1569ff3d11c4d
+
+
 
 /*---------------------------------------------------------------------------*/
 PROCESS(hello_world_process, "Hello world process");
@@ -79,6 +91,7 @@ AUTOSTART_PROCESSES(&hello_world_process);
 PROCESS_THREAD(hello_world_process, ev, data)
 {
   PROCESS_BEGIN();
+<<<<<<< HEAD
 
   printf("Enter bootloader mode with BTN1+RESET\n");
 
@@ -102,6 +115,15 @@ PROCESS_THREAD(hello_world_process, ev, data)
 //  printf("data is %i \n", (int)data);
   board_i2c_shutdown();
 
+=======
+  uint8_t res;
+  uint8_t regaddr = 0xD0;
+  printf("Hello, world\n");
+  printf("Enabling entering bootloader mode with BTN1+Reset BTN!\n");
+  board_i2c_select(0,bme280_addr);
+  board_i2c_write_read(&regaddr,1, &res,1);
+  printf("res:%d",res);
+>>>>>>> 0bb7fe8bc5393fb9b34a68205fd1569ff3d11c4d
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
