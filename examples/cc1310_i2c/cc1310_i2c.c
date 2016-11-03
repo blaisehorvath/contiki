@@ -38,10 +38,10 @@
  */
 
 #define ROM_BOOTLOADER_ENABLE                 1
-#define BOOTLOADER_ENABLE = 0xC5`
-#define BL_LEVEL = 0x00`
-#define BL_PIN_NUMBER = 0x0B` 
-#define BL_ENABLE = 0xC5`
+#define BOOTLOADER_ENABLE = 0xC5
+#define BL_LEVEL = 0x00
+#define BL_PIN_NUMBER = 0x0B
+#define BL_ENABLE = 0xC5
 
 #include "contiki.h"
 
@@ -50,9 +50,27 @@
 #include "ti-lib.h"
 #include "i2c.h"
 
-static uint32_t i2c_base = 0x4000200;
-static uint32_t i2c_clk = 400000;
-static uint8_t bme280_addr = 0x76;
+
+#include <inc/hw_memmap.h>
+//
+/*---------------------------------------------------------------------------*/
+#include "contiki-conf.h"
+#include "ti-lib.h"
+#include "board-i2c.h"
+#include "lpm.h"
+
+#include <string.h>
+#include <stdbool.h>
+/*---------------------------------------------------------------------------*/
+#define NO_INTERFACE 0xFF
+/*---------------------------------------------------------------------------*/
+//static uint8_t slave_addr = 0x00;
+//static uint8_t interface = NO_INTERFACE;
+/*---------------------------------------------------------------------------*/
+
+//static uint32_t i2c_base = 0x40002000;
+//static uint32_t i2c_clk = 400000;
+//static uint8_t bme280_addr = 0x76;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(hello_world_process, "Hello world process");
@@ -62,19 +80,27 @@ PROCESS_THREAD(hello_world_process, ev, data)
 {
   PROCESS_BEGIN();
 
-  printf("Hello, world\n");
-  printf("Enabling entering bootloader mode with BTN1+Reset BTN!\n");
+  printf("Enter bootloader mode with BTN1+RESET\n");
 
-  printf("Starting to initialize i2c communication");
-  I2CMasterInitExpClk(i2c_base, ti_lib_sys_ctrl_clock_get(), false);
-  printf("%i",1);
-  I2CMasterSlaveAddrSet(i2c_base, bme280_addr, false);
-  I2CMasterDataPut(i2c_base, 0xd0);
-  printf("%i",2);
-  I2CMasterControl(i2c_base, (uint32_t)I2C_MASTER_CMD_SINGLE_SEND);
-  uint32_t res;
-  res = I2CSlaveDataGet(i2c_base);
-  printf("response %i \n", (int)res);
+  printf("Selecting I2C 0 \n");
+  uint8_t slave_addr = 0x02;
+  board_i2c_select(0,slave_addr);
+
+  uint8_t data[8];
+  board_i2c_read(&data[0],8);
+
+  for (int i = 0; i<8; i++) {
+	  printf("byte %i is 0x%x \n", i, (unsigned char)data[i]);
+  }
+
+  double temp = *((double*)data);
+  printf("temp is: %f \n", temp);
+  double a;
+  int size = sizeof(a);
+
+  printf("size of double in contiki is %i", size);
+//  printf("data is %i \n", (int)data);
+  board_i2c_shutdown();
 
   PROCESS_END();
 }
