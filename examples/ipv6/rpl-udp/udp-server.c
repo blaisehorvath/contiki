@@ -49,7 +49,8 @@
 #define UDP_SERVER_PORT	5678
 
 #define UDP_EXAMPLE_ID  190
-
+#define SERVER_REPLY 1
+#include "dev/leds.h"
 static struct uip_udp_conn *server_conn;
 
 PROCESS(udp_server_process, "UDP server process");
@@ -59,7 +60,7 @@ static void
 tcpip_handler(void)
 {
   char *appdata;
-
+    leds_toggle(LEDS_RED);
   if(uip_newdata()) {
     appdata = (char *)uip_appdata;
     appdata[uip_datalen()] = 0;
@@ -104,6 +105,7 @@ PROCESS_THREAD(udp_server_process, ev, data)
   PROCESS_BEGIN();
 
   PROCESS_PAUSE();
+    leds_arch_init();
 
   SENSORS_ACTIVATE(button_sensor);
 

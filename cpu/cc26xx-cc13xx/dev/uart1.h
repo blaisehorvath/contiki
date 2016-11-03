@@ -44,6 +44,7 @@
 #include "dev/cc26xx-uart.h"
 
 #define BAUD2UBR(x) x
+#define uart1_init(x) cc26xx_uart_init()
 #define uart1_set_input(f) cc26xx_uart_set_input(f)
 
 #endif /* UART1_H_ */

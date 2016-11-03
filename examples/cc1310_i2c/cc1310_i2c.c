@@ -49,10 +49,16 @@
 #include <stdbool.h>
 #include "ti-lib.h"
 #include "i2c.h"
+#include "board-i2c.h"
 
-static uint32_t i2c_base = 0x4000200;
-static uint32_t i2c_clk = 400000;
+#define BOARD_IOID_SDA            IOID_5 /**< Interface 0 SDA: All sensors bar MPU */
+#define BOARD_IOID_SCL            IOID_6 /**< Interface 0 SCL: All sensors bar MPU */
+#define BOARD_IOID_SDA_HP         IOID_8 /**< Interface 1 SDA: MPU */
+#define BOARD_IOID_SCL_HP         IOID_9 /**< Interface 1 SCL: MPU */
+static uint32_t i2c_base = 0x40002000;
 static uint8_t bme280_addr = 0x76;
+
+
 
 /*---------------------------------------------------------------------------*/
 PROCESS(hello_world_process, "Hello world process");
@@ -61,21 +67,13 @@ AUTOSTART_PROCESSES(&hello_world_process);
 PROCESS_THREAD(hello_world_process, ev, data)
 {
   PROCESS_BEGIN();
-
+  uint8_t res;
+  uint8_t regaddr = 0xD0;
   printf("Hello, world\n");
   printf("Enabling entering bootloader mode with BTN1+Reset BTN!\n");
-
-  printf("Starting to initialize i2c communication");
-  I2CMasterInitExpClk(i2c_base, ti_lib_sys_ctrl_clock_get(), false);
-  printf("%i",1);
-  I2CMasterSlaveAddrSet(i2c_base, bme280_addr, false);
-  I2CMasterDataPut(i2c_base, 0xd0);
-  printf("%i",2);
-  I2CMasterControl(i2c_base, (uint32_t)I2C_MASTER_CMD_SINGLE_SEND);
-  uint32_t res;
-  res = I2CSlaveDataGet(i2c_base);
-  printf("response %i \n", (int)res);
-
+  board_i2c_select(0,bme280_addr);
+  board_i2c_write_read(&regaddr,1, &res,1);
+  printf("res:%d",res);
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
