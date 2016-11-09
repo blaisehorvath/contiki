@@ -45,7 +45,7 @@ typedef struct {
 	uint16_t pkt_cnt;
 	pkt_msg msg;        /**< Message type */
 	uint8_t cnt;       /**< Count: for ex count of devs / number of current dev */
-	char name[20];
+	char name[23];
 	uint8_t new_device; /**< New sensor on the node side if true, request of a GET_SENSACT_LIST */
 } rfnode_pkt; //TODO: Proper alignment
 

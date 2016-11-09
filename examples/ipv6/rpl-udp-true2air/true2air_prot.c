@@ -12,8 +12,9 @@
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 #include "dev/leds.h"
+#include "board-i2c.h"
 
-#define WITH_BME280 1
+#define WITH_BME280 0
 #define NO_INTERFACE 0xFF
 uint8_t node_initialized = 0;
 uint8_t slave_addr = 0x02;

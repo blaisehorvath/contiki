@@ -103,7 +103,7 @@ send_init_packet(void *ptr)
   pkt.new_device = 0;
   pkt.msg = SET_IPADDR;
   pkt.pkt_cnt = 0;
-  for ( i = 0; i < 20 ; i++) pkt.name[i] = 0;
+  for ( i = 0; i < 23 ; i++) pkt.name[i] = 0;
   sprintf(pkt.name, "SETIPADDRMSG");
   uip_udp_packet_sendto(client_conn, (void*)&pkt, sizeof(rfnode_pkt),
                         &server_ipaddr, UIP_HTONS(UDP_SERVER_PORT));
