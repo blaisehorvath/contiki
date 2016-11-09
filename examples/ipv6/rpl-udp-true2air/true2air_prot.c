@@ -12,7 +12,11 @@
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 #include "dev/leds.h"
+
+#define WITH_BME280 1
+#define NO_INTERFACE 0xFF
 uint8_t node_initialized = 0;
+uint8_t slave_addr = 0x02;
 int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 {
 	leds_on(LEDS_BLUE);
@@ -33,7 +37,7 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			pkt_out->data = 0;
 			pkt_out->new_device = 0;
 			sprintf(pkt_out->name,"REPLY FROM NODE!");
-			pkt_out->cnt = 2;
+			pkt_out->cnt = WITH_BME280?5:2;
 			return 1;
 		case SENSACT_LIST_ITEM:
 			pkt_out->msg = SENSACT_LIST_ITEM;
@@ -47,6 +51,17 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 				case 1:
 					sprintf(pkt_out->name,"LED(GREEN)");
 					return 1;
+#ifdef WITH_BME280
+				case 2:
+					sprintf(pkt_out->name,"TEMP");
+					return 1;
+				case 3:
+					sprintf(pkt_out->name,"PRESS");
+					return 1;
+				case 4:
+					sprintf(pkt_out->name,"HUMIDITY");
+					return 1;
+#endif
 				default:
 					pkt_out->msg = ERROR_PKT_MSG;
 			}
@@ -63,6 +78,74 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 				sprintf(pkt_out->name,"LED(GREEN)");
 				pkt_out->data = (leds_get() &LEDS_GREEN) == 1;// WROOONG
 			}
+#ifdef WITH_BME280
+			else if(pkt_in->cnt == 2 && !strcmp(pkt_in->name,"TEMP")){
+				sprintf(pkt_out->name,"TEMP");
+				  board_i2c_select(0,slave_addr);
+
+				  uint8_t data[24];
+
+
+				  board_i2c_read(&data[0],24);
+				  board_i2c_shutdown();
+
+
+				  double temp = 0;
+				  double pres = 0;
+				  double hum = 0;
+
+				  for (int i = 0; i<8; i++) {
+					  *(((char*)&temp)+i)=data[i];
+					  *(((char*)&pres)+i)=data[i+8];
+					  *(((char*)&hum)+i)=data[i+16];
+				  }
+				pkt_out->data = (uint32_t)(temp*1000);
+			}
+			else if(pkt_in->cnt == 3 && !strcmp(pkt_in->name,"PRESS")){
+				sprintf(pkt_out->name,"PRESS");
+				  board_i2c_select(0,slave_addr);
+
+				  uint8_t data[24];
+
+
+				  board_i2c_read(&data[0],24);
+				  board_i2c_shutdown();
+
+
+				  double temp = 0;
+				  double pres = 0;
+				  double hum = 0;
+
+				  for (int i = 0; i<8; i++) {
+					  *(((char*)&temp)+i)=data[i];
+					  *(((char*)&pres)+i)=data[i+8];
+					  *(((char*)&hum)+i)=data[i+16];
+				  }
+				pkt_out->data = (uint32_t)(pres*1);
+			}
+			else if(pkt_in->cnt == 4 && !strcmp(pkt_in->name,"HUMIDITY")){
+				sprintf(pkt_out->name,"HUMIDITY");
+				  board_i2c_select(0,slave_addr);
+
+				  uint8_t data[24];
+
+
+				  board_i2c_read(&data[0],24);
+				  board_i2c_shutdown();
+
+
+				  double temp = 0;
+				  double pres = 0;
+				  double hum = 0;
+
+				  for (int i = 0; i<8; i++) {
+					  *(((char*)&temp)+i)=data[i];
+					  *(((char*)&pres)+i)=data[i+8];
+					  *(((char*)&hum)+i)=data[i+16];
+				  }
+				pkt_out->data =(uint32_t)(hum*1000);
+			}
+#endif
 			else sprintf(pkt_out->name,"WRONG NUMBER/NAME!");
 			return 1;
 

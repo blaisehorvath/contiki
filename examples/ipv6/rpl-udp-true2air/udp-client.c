@@ -63,6 +63,15 @@
 #define SET_IP_TIME (10* CLOCK_SECOND)
 #define MAX_PAYLOAD_LEN		30
 
+#define ROM_BOOTLOADER_ENABLE                 1
+#define BOOTLOADER_ENABLE = 0xC5
+#define BL_LEVEL = 0x00
+#define BL_PIN_NUMBER = 0x0B
+#define BL_ENABLE = 0xC5
+
+
+
+
 static struct uip_udp_conn *client_conn;
 static uip_ipaddr_t server_ipaddr;
 

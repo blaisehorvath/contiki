@@ -64,14 +64,6 @@
 #include <stdbool.h>
 /*---------------------------------------------------------------------------*/
 #define NO_INTERFACE 0xFF
-/*---------------------------------------------------------------------------*/
-//static uint8_t slave_addr = 0x00;
-//static uint8_t interface = NO_INTERFACE;
-/*---------------------------------------------------------------------------*/
-
-//static uint32_t i2c_base = 0x40002000;
-//static uint32_t i2c_clk = 400000;
-//static uint8_t bme280_addr = 0x76;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(hello_world_process, "Hello world process");
@@ -87,20 +79,41 @@ PROCESS_THREAD(hello_world_process, ev, data)
   uint8_t slave_addr = 0x02;
   board_i2c_select(0,slave_addr);
 
-  uint8_t data[8];
-  board_i2c_read(&data[0],8);
+  uint8_t data[24];
+
+
+  board_i2c_read(&data[0],24);
+  board_i2c_shutdown();
+
+
+  double temp = 0;
+  double pres = 0;
+  double hum = 0;
 
   for (int i = 0; i<8; i++) {
-	  printf("byte %i is 0x%x \n", i, (unsigned char)data[i]);
+	  *(((char*)&temp)+i)=data[i];
+	  *(((char*)&pres)+i)=data[i+8];
+	  *(((char*)&hum)+i)=data[i+16];
   }
 
-  double temp = *((double*)data);
-  printf("temp is: %f \n", temp);
-  double a;
-  int size = sizeof(a);
 
-  printf("size of double in contiki is %i", size);
-  board_i2c_shutdown();
+
+  for (int i = 0; i<(24); i++) {
+	  if (i==0) {
+		  printf("\nT: 0x%x", (unsigned char)data[i]);
+	  }
+	  else if (i==8) {
+		  printf("\np: 0x%x", (unsigned char)data[i]);
+	  }
+	  else if (i==16) {
+		  printf("\nhumidity: 0x%x", (unsigned char)data[i]);
+	  }
+	  else {
+		  printf("[%i]", i);
+		  printf("%x", (unsigned char)data[i]);
+	  }
+  }
+  printf("\n %d, %d, %d ",(int)(temp*1000),(int)(pres), (int)(hum*1000) );
 
   PROCESS_END();
 }

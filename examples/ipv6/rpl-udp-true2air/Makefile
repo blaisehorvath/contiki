@@ -1,6 +1,6 @@
 all: udp-client udp-server
 CONTIKI=../../..
-PROJECT_SOURCEFILES += true2air_prot.c
+PROJECT_SOURCEFILES += true2air_prot.c board-i2c.c
 CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
 
 ifdef WITH_COMPOWER
