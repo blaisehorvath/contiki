@@ -14,7 +14,12 @@ endif
 ifdef PERIOD
 CFLAGS+=-DPERIOD=$(PERIOD)
 endif
-
+ifdef SIMULATED
+CFLAGS+=-DSIMULATED=$(SIMULATED)
+endif
+ifdef WITH_BME280
+CFLAGS+=DWITH_BME280=$(WITH_BME280)
+endif
 CONTIKI_WITH_IPV6 = 1
 include $(CONTIKI)/Makefile.include
 
