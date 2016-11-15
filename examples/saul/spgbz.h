@@ -1,14 +1,12 @@
-/*
- * spgbz.h
- *
- *  Created on: Nov 9, 2016
- *      Author: v
- */
+#include <stdio.h>
+#include <string.h>
+#include "bus_manager.h"
 
 #ifndef EXAMPLES_IPV6_RPL_UDP_TRUE2AIR_SPGBZ_H_
 #define EXAMPLES_IPV6_RPL_UDP_TRUE2AIR_SPGBZ_H_
 
-#include "bus_manager.h"
+
+
 /*!
  * The spgbz_list_t is the element of the linked list which holds
  * the current sensors which are on the bus currently.
@@ -20,20 +18,23 @@
  * \dev_id is the device id of the sensor module
  * \sensor_id is the number of the sensor in the sensor module
  * */
-typedef struct spgbz_list_t {
+typedef struct spgbz_list_item {
 	bus_comm_t (*read) (int32_t,char );
 	bus_comm_t (*write)(int32_t,char, double);
 	char name[23];
 	uint32_t dev_id;
 	uint8_t sensor_id;
-	spgbz_list_t* NEXT;
-};
-spgbz_list_t spgbz_list_HEAD = {0,0,0,0,0,0};
+} spgbz_list_t;
+
+
+void init_spgbz();
+
 /*!
  * The del_list_item function deletes all sensors with the given dev_id value from the spgbz_list
  * \param dev_id The dev_id of the sensor which should be deleted, often because it disconnected from the bus
  */
 void del_list_items(uint32_t dev_id);
+
 /*!
  * The add_list_item function adds a sensor item to the spgbz_list, often because a sensor
  * has been connected to the bus
