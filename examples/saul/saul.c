@@ -51,6 +51,7 @@
 #include "contiki-conf.h"
 #include "spgbz.h"
 #include "bus_manager.h"
+#include "tru2air_spi.h"
 /*---------------------------------------------------------------------------*/
 
 /*-----------------------------------TESTS-----------------------------------*/
@@ -61,6 +62,12 @@
 PROCESS(saul, "saul");
 AUTOSTART_PROCESSES(&saul);
 /*---------------------------------------------------------------------------*/
+void SPIcallback () {
+	printf("SPI INTERRUPT\n");
+	uint8_t data = getByteFromSPI();
+	sendByteviaSPI(17);
+}
+
 PROCESS_THREAD(saul, ev, data)
 {
   PROCESS_BEGIN();
@@ -71,7 +78,9 @@ PROCESS_THREAD(saul, ev, data)
 
   runTests();
 
-  bus_scan();
+  initSPISlave(SPIcallback);
+
+  while(1){};
 
   PROCESS_END();
 }

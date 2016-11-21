@@ -1,6 +1,9 @@
 CONTIKI_PROJECT = mmalloc_example.c
 
 all: $(CONTIKI_PROJECT)
-PROJECT_SOURCEFILES += spgbz.c test_saul.c board-i2c.c bus_manager.c
+PROJECT_SOURCEFILES += spgbz.c test_saul.c board-i2c.c bus_manager.c tru2air_spi.c
+
+# Wformat flag disables printf type checking warnings
+CFLAGS += -Wformat -Wno-unused-variable
 CONTIKI = ../..
 include $(CONTIKI)/Makefile.include
