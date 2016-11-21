@@ -9,6 +9,8 @@
 #define EXAMPLES_IPV6_RPL_UDP_TRUE2AIR_BUS_MANAGER_H_
 
 #include <stdint.h>
+#include "board-i2c.h"
+#include "ti-lib.h"
 
 /*! bus_comm_t describes a data type which is returned both from the
  * i2c bus and to the spgbz as a data value from a sensor
@@ -59,10 +61,14 @@ bus_comm_t i2c_read(uint32_t dev_id, uint8_t sensor_id);
  * 		|<---------------R,addr|bus_comm_t data|--------------->| Master request, slave answer
  */
 bus_comm_t i2c_write(uint32_t dev_id, uint8_t sensor_id,double data);
+
 /*!
- * The bus_check function checks if there's any new or disconnected sensors and
+ * The scan_bus function checks if there's any new or disconnected sensors and
  * calls the add or remove function from the spgbz accordingly
  */
-void bus_check(void);
+
+_Bool detectDevice (uint8_t address);
+void scan_bus(void);
+
 
 #endif /* EXAMPLES_IPV6_RPL_UDP_TRUE2AIR_BUS_MANAGER_H_ */
