@@ -69,9 +69,6 @@
 #define BL_PIN_NUMBER = 0x0B
 #define BL_ENABLE = 0xC5
 
-
-
-
 static struct uip_udp_conn *client_conn;
 static uip_ipaddr_t server_ipaddr;
 
@@ -103,8 +100,13 @@ send_init_packet(void *ptr)
   pkt.new_device = 0;
   pkt.msg = SET_IPADDR;
   pkt.pkt_cnt = 0;
+#ifdef SIMULATED
+  for ( i = 0; i < 22 ; i++) pkt.name[i] = 0;
+#else
   for ( i = 0; i < 23 ; i++) pkt.name[i] = 0;
+#endif
   sprintf(pkt.name, "SETIPADDRMSG");
+  PRINTF("ZEROED\n");
   uip_udp_packet_sendto(client_conn, (void*)&pkt, sizeof(rfnode_pkt),
                         &server_ipaddr, UIP_HTONS(UDP_SERVER_PORT));
 }
@@ -202,14 +204,10 @@ PROCESS_THREAD(udp_client_process, ev, data)
     if(ev == tcpip_event) {
       tcpip_handler();
     }
-    //if(etimer_expired(&periodic)) {
-    //  etimer_reset(&periodic);
     if(etimer_expired(&periodic) && !node_is_initialized()){
     	etimer_reset(&periodic);
     	send_init_packet(0);
     }
-      //ctimer_set(&backoff_timer, SEND_TIME, send_packet, NULL);
-    //}
   }
 
   PROCESS_END();

@@ -36,7 +36,7 @@
  * Board-specific I2C driver for the Sensortag-CC26xx
  */
 /*---------------------------------------------------------------------------*/
-
+#ifndef SIMULATED
 #define CC1310_IOID_SDA 13
 #define CC1310_IOID_SCL 14
 #include "contiki-conf.h"
@@ -333,3 +333,4 @@ board_i2c_select(uint8_t new_interface, uint8_t address)
 }
 /*---------------------------------------------------------------------------*/
 /** @} */
+#endif

@@ -12,10 +12,14 @@
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 #include "dev/leds.h"
-#include "board-i2c.h"
 
-#define WITH_BME280 0
+#ifndef SIMULATED
+#include "board-i2c.h"
+#endif
+
 #define NO_INTERFACE 0xFF
+
+
 uint8_t node_initialized = 0;
 uint8_t slave_addr = 0x02;
 int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
@@ -38,7 +42,12 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			pkt_out->data = 0;
 			pkt_out->new_device = 0;
 			sprintf(pkt_out->name,"REPLY FROM NODE!");
-			pkt_out->cnt = WITH_BME280?5:2;
+			pkt_out->cnt =
+#ifdef WITH_BME280
+					5;
+#else
+					2;
+#endif
 			return 1;
 		case SENSACT_LIST_ITEM:
 			pkt_out->msg = SENSACT_LIST_ITEM;
@@ -94,8 +103,8 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 				  double temp = 0;
 				  double pres = 0;
 				  double hum = 0;
-
-				  for (int i = 0; i<8; i++) {
+				  int i = 0;
+				  for (i = 0; i<8; i++) {
 					  *(((char*)&temp)+i)=data[i];
 					  *(((char*)&pres)+i)=data[i+8];
 					  *(((char*)&hum)+i)=data[i+16];
@@ -116,8 +125,8 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 				  double temp = 0;
 				  double pres = 0;
 				  double hum = 0;
-
-				  for (int i = 0; i<8; i++) {
+				  int i = 0;
+				  for (i = 0; i<8; i++) {
 					  *(((char*)&temp)+i)=data[i];
 					  *(((char*)&pres)+i)=data[i+8];
 					  *(((char*)&hum)+i)=data[i+16];
@@ -138,8 +147,8 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 				  double temp = 0;
 				  double pres = 0;
 				  double hum = 0;
-
-				  for (int i = 0; i<8; i++) {
+				  int i = 0;
+				  for (i = 0; i<8; i++) {
 					  *(((char*)&temp)+i)=data[i];
 					  *(((char*)&pres)+i)=data[i+8];
 					  *(((char*)&hum)+i)=data[i+16];

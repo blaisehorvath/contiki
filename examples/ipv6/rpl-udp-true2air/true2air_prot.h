@@ -9,6 +9,9 @@
 #define EXAMPLES_IPV6_RPL_UDP_TRUE2AIR_TRUE2AIR_PROT_H_
 #include <stdint.h>
 #include "net/ip/uip.h"
+
+
+#define SIMULATED 1
 /**
  * @brief   Our application level communication protocol
  * Flow:
@@ -45,7 +48,11 @@ typedef struct {
 	uint16_t pkt_cnt;
 	pkt_msg msg;        /**< Message type */
 	uint8_t cnt;       /**< Count: for ex count of devs / number of current dev */
+#ifdef SIMULATED
+	char name[22];
+#else
 	char name[23];
+#endif
 	uint8_t new_device; /**< New sensor on the node side if true, request of a GET_SENSACT_LIST */
 } rfnode_pkt; //TODO: Proper alignment
 
