@@ -5,4 +5,7 @@
 _Bool testAddItem();
 _Bool testInit();
 _Bool testDeleteItem();
+_Bool testBoardManInit ();
+_Bool testBoardManAddItem ();
+
 void runTests();

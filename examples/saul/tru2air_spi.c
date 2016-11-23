@@ -31,13 +31,13 @@ void initSPISlave(void (spi_int_cb)()){
 uint8_t getByteFromSPI(){
 	uint32_t data;
 	(void)SSIDataGetNonBlocking(SSI0_BASE,&data);
-	printf("SPI RECEIEVE %d\n",((char*)&data)[0]);
+//	printf("SPI RECEIEVE 0x%02x\n",((char*)&data)[0]);
 	return (((uint8_t*)&data)[0]);
 }
 
 void sendByteviaSPI(uint8_t answer){
-	printf("SPI ANSWER: %u \n", answer);
-	SSIDataPut(SSI0_BASE, answer);
+//	printf("SPI ANSWER: %u \n", answer);
+	SSIDataPutNonBlocking(SSI0_BASE, answer);
 };
 
 

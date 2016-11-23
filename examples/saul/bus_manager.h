@@ -10,7 +10,33 @@
 
 #include <stdint.h>
 #include "board-i2c.h"
+#include "tru2air_spi.h"
 #include "ti-lib.h"
+
+/**
+ * This function initializes the bus manager.
+ *
+ * @section Description
+ * Every element of the devices array has to be {0, 0} because that means that there is
+ * no device available on that address.
+ */
+void init_i2c_bus_manager ();
+
+/**
+ * This function is used to get the lowest possible empty i2c address for a new device.
+ * @param uint32_t devAddr Is the address that was burnt into the sensor device's firmware.
+ * @returns uint8_t 0 if error happens else returns a valid i2c slave address (1-127) because the address 0 is reserved for the msp430 on the Tru2Air node.
+ */
+uint8_t register_i2c_device();
+
+
+/**
+ * This function removes a i2c device from the managed devices
+ * @section Destription
+ * When a device is no longer reachable it is automatically removed. This function also calls the proper function
+ * that removes every sensor related to this device from the spgbz.
+ */
+void remove_i2c_device (uint8_t i2c_addr);
 
 /*! bus_comm_t describes a data type which is returned both from the
  * i2c bus and to the spgbz as a data value from a sensor
@@ -22,16 +48,15 @@ typedef struct bus_comm{
 	double data;
 } bus_comm_t;
 
+
 /*!
- * I2C_list_t is one element of the linked of I2C modules
- * dev_id holds the dev_id which is burned into the sensor firmware, and used to identify the sensor
- * addr is the address where the sensor can be accessed
+ * This array holds the device ids of the connected i2c devices.
+ *
+ * @section Description
+ * Every device has a burnt in dev_id in the sensor firmware, and it is used to identify the device.
+ * The array index represents the i2c slave address of the item.
  */
-typedef struct I2C_list_item{
-	uint32_t dev_id;
-	uint8_t addr;
-	struct I2C_list_item* NEXT;
-} I2C_list_t;
+uint32_t i2c_devices [127];
 
 /*!
  * sensor_descriptor_t is a structure which holds all the parameters needed to initialize a sensor

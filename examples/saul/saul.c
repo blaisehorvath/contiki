@@ -62,11 +62,6 @@
 PROCESS(saul, "saul");
 AUTOSTART_PROCESSES(&saul);
 /*---------------------------------------------------------------------------*/
-void SPIcallback () {
-	printf("SPI INTERRUPT\n");
-	uint8_t data = getByteFromSPI();
-	sendByteviaSPI(17);
-}
 
 PROCESS_THREAD(saul, ev, data)
 {
@@ -75,10 +70,10 @@ PROCESS_THREAD(saul, ev, data)
   printf("Initializing I2C manager and SPGBZ\n");
 
   init_spgbz();
+  init_i2c_bus_manager();
 
   runTests();
 
-  initSPISlave(SPIcallback);
 
   while(1){};
 

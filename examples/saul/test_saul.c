@@ -1,17 +1,23 @@
 #include "test_saul.h"
 
 extern spgbz_list_t device_list[127];
+extern uint32_t i2c_devices[127];
 
 bus_comm_t testFunc () {
 	return (bus_comm_t){0,8.5};
 }
 
 void runTests() {
-  printf("\nTesting init: %s \n", testInit() ? "success" : "fail");
-  printf("Testing add item: %s \n", testAddItem() ? "success" : "fail");
-  printf("Testing deleting items: %s \n", testDeleteItem() ? "success" : "fail");
+  printf("\nTesting spgbz init: %s \n", testInit() ? "success" : "fail");
+  printf("Testing spgbz add item: %s \n", testAddItem() ? "success" : "fail");
+  printf("Testing spgbz deleting items: %s \n", testDeleteItem() ? "success" : "fail");
+  printf("\nTesting board manager init: %s \n", testBoardManInit() ? "success" : "fail");
+  printf("Testing board manager register new dev: %s \n", testBoardManAddItem() ? "success" : "fail");
 }
 
+/*=======================
+ *  Testing  spgbz
+ =======================*/
 _Bool testInit () {
 	int i;
 	for (i = 0; i<127; i++) {
@@ -42,6 +48,32 @@ _Bool testDeleteItem () {
 	return (_Bool)0;
 }
 
-_Bool testReadWriteInvoke () {
+//_Bool testReadWriteInvoke () {
+//
+//};
 
+/*=======================
+ *  Testing  bus_manager
+ =======================*/
+_Bool testBoardManInit () {
+	int i;
+	for (i = 0; i<127; i++) {
+		if(i2c_devices[i] != 0) {
+			return (_Bool)0;
+		}
+	}
+	return (_Bool)1;
+}
+
+_Bool testBoardManAddItem () {
+	register_i2c_device(123123);
+	register_i2c_device(124124);
+	register_i2c_device(123123);
+	int i =0;
+	if (i2c_devices[0]==0 && i2c_devices[3]==0) i++;
+	if (i2c_devices[1]==123123) i++;
+	if (i2c_devices[2]==124124) i++;
+
+	if(i==3) return (_Bool)1;
+	else return (_Bool)0;
 };
