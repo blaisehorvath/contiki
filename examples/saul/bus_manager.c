@@ -10,55 +10,43 @@
  */
 uint8_t received_bytes[4];
 uint8_t rx_byte_count = 0;
-uint8_t ack_byte_count = 0;
 
 /**
  *  @brief This enum represents the state of the Tru2air sensor-node SPI communication protocol states
  */
 enum STATUS {
-	IDLE, /*!< Waiting for init from the master (sensor) */
 	RX, /*!< Receiving data from master */
 	RXTX, /*!< Receiving the last byte from the */
-	END /*!< Getting ready for the nex init */
 };
 
 /**
  * Initializing the protocol. Idle is the state that handles the init.
  */
-enum STATUS SPI_STATUS = IDLE;
+enum STATUS SPI_STATUS = RX;
 
 void SPIcallback () {
+	leds_on(LEDS_GREEN);
 	switch (SPI_STATUS) {
-		case IDLE:
-			//discarding the init (first) byte
-			(void)getByteFromSPI();
-			sendByteviaSPI((uint8_t)0xFF); //acking the init with 0xff
-			SPI_STATUS = RX;
-			break;
 		case RX:
-			received_bytes[rx_byte_count] = getByteFromSPI();
-			rx_byte_count++;
-			sendByteviaSPI((uint8_t)0x01); //acking the recieved byte with 0x01
-			ack_byte_count++;
-			if (ack_byte_count == 4) SPI_STATUS = RXTX;
+			printf("ANYAD FASZA\n");
+			received_bytes[rx_byte_count++] = getByteFromSPI();
+			if (rx_byte_count == 4) {
+				SPI_STATUS = RXTX;
+				sendByteviaSPI((uint8_t)0x07);
+			}
+			else sendByteviaSPI((uint8_t)0x66); //acking the recieved byte with 0x01
 			break;
-
 		case RXTX:
+			printf("ANYAD PICSAJA\n");
 			//receiving the last byte and sending a response to master
-			received_bytes[rx_byte_count] = getByteFromSPI();
-			sendByteviaSPI((uint8_t)0x07);
-			SPI_STATUS = END;
-			ack_byte_count = 0;
+			printf("result is 0x%08x \n", *(uint32_t *)received_bytes);
+			(void)getByteFromSPI();
+			while(SSIDataGetNonBlocking(SSI0_BASE,received_bytes));//Empty fifo
+			SPI_STATUS = RX;
 			rx_byte_count = 0;
 			break;
-
-		case END:
-			(void)getByteFromSPI();
-			sendByteviaSPI((uint8_t)0x01);
-			SPI_STATUS = IDLE;
-			printf("result is 0x%08x \n", *(uint32_t *)received_bytes);
-			break;
 	}
+	leds_off(LEDS_GREEN);
 }
 
 void requestData (uint8_t slave_addr);
