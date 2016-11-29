@@ -14,10 +14,11 @@ byte i2c_addr;
 
 void setup() {
   // i2c
-  Serial.begin(9600);
-  Serial.print("tivac spi-i2c\n");
+  //Serial.begin(9600);
+  //Serial.print("tivac spi-i2c\n");
+    Wire.setModule(0);
   Wire.begin(8);                // join i2c bus with address #8
-  Wire.setModule(3);
+
   Wire.onRequest(reqEvent); // register event
   Wire.onReceive(recEvent);
 

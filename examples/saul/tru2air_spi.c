@@ -8,6 +8,7 @@ void initSPISlave(void (spi_int_cb)()){
 
   /* Enable the clock for SPI */
   ti_lib_prcm_peripheral_run_enable(PRCM_PERIPH_SSI0);
+
   ti_lib_prcm_load_set();
   while(!ti_lib_prcm_load_get());
 
@@ -19,7 +20,7 @@ void initSPISlave(void (spi_int_cb)()){
 			  ti_lib_sys_ctrl_clock_get(),
 			  SSI_FRF_MOTO_MODE_0,
 			  SSI_MODE_SLAVE,
-			  ti_lib_sys_ctrl_clock_get()/16,
+			  ti_lib_sys_ctrl_444clock_get()/16,
 			  8
 		  );
 
