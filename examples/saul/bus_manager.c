@@ -5,59 +5,6 @@
 
 #define NO_INTERFACE 0xFF
 
-/**
- * Variables for dealing with the state.
- */
-uint8_t received_bytes[4];
-uint8_t rx_byte_count = 0;
-
-/**
- *  @brief This enum represents the state of the Tru2air sensor-node SPI communication protocol states
- */
-enum STATUS {
-	RX, /*!< Receiving data from master */
-	RXTX, /*!< Receiving the last byte from the */
-};
-
-/**
- * Initializing the protocol. Idle is the state that handles the init.
- */
-enum STATUS SPI_STATUS = RX;
-
-void SPIcallback () {
-	leds_on(LEDS_GREEN);
-	switch (SPI_STATUS) {
-		case RX:
-			printf("ANYAD FASZA\n");
-			received_bytes[rx_byte_count++] = getByteFromSPI();
-			if (rx_byte_count == 4) {
-				SPI_STATUS = RXTX;
-				sendByteviaSPI((uint8_t)0x07);
-			}
-			else sendByteviaSPI((uint8_t)0x66); //acking the recieved byte with 0x01
-			break;
-		case RXTX:
-			printf("ANYAD PICSAJA\n");
-			//receiving the last byte and sending a response to master
-			printf("result is 0x%08x \n", *(uint32_t *)received_bytes);
-			(void)getByteFromSPI();
-			while(SSIDataGetNonBlocking(SSI0_BASE,received_bytes));//Empty fifo
-			SPI_STATUS = RX;
-			rx_byte_count = 0;
-			break;
-	}
-	leds_off(LEDS_GREEN);
-}
-
-void requestData (uint8_t slave_addr);
-
-void bus_scan() {
-	uint8_t slaveAddr = 0x02;
-	printf("Requesting from 0x%02x\n", slaveAddr);
-	requestData(slaveAddr);
-	printf("End of transmission");
-}
-
 _Bool detectDevice (uint8_t address) {
 	uint8_t slave_addr = address;
 	char messages[] = {'F', 'A', 'S', 'Z'};
@@ -75,8 +22,8 @@ void requestData (uint8_t slave_addr) {
 }
 
 void init_i2c_bus_manager () {
-	initSPISlave(SPIcallback);
-	leds_arch_init();
+	leds_arch_init(); //for debugging
+
 	int i;
 	for (i = 0; i<127; i++) {
 		i2c_devices[i] = 0;

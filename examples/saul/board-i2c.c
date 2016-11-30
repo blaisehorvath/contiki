@@ -88,6 +88,23 @@ board_i2c_wakeup()
                                  true);
 }
 /*---------------------------------------------------------------------------*/
+void
+board_i2c_wakeup_slave(uint8_t address)
+{
+  /* First, make sure the SERIAL PD is on */
+  ti_lib_prcm_power_domain_on(PRCM_DOMAIN_SERIAL);
+  while((ti_lib_prcm_power_domain_status(PRCM_DOMAIN_SERIAL)
+        != PRCM_DOMAIN_POWER_ON));
+
+  /* Enable the clock to I2C */
+  ti_lib_prcm_peripheral_run_enable(PRCM_PERIPH_I2C0);
+  ti_lib_prcm_load_set();
+  while(!ti_lib_prcm_load_get());
+
+  /* Enable and initialize the I2C master module */
+  ti_lib_i2c_slave_init(I2C0_BASE, address);
+}
+/*---------------------------------------------------------------------------*/
 static bool
 i2c_status()
 {
@@ -329,6 +346,34 @@ board_i2c_select(uint8_t new_interface, uint8_t address)
     /* Enable and initialize the I2C master module */
     ti_lib_i2c_master_init_exp_clk(I2C0_BASE, ti_lib_sys_ctrl_clock_get(),
                                    false);
+  }
+}
+void
+board_i2c_select_slave(uint8_t new_interface, uint8_t address)
+{
+  slave_addr = address;
+
+  if(accessible() == false) {
+    board_i2c_wakeup_slave(address);
+  }
+
+  if(new_interface != interface) {
+    interface = new_interface;
+
+    ti_lib_i2c_master_disable(I2C0_BASE);
+
+    if(interface == BOARD_I2C_INTERFACE_0) {
+      ti_lib_ioc_io_port_pull_set(CC1310_IOID_SDA, IOC_NO_IOPULL);
+      ti_lib_ioc_io_port_pull_set(CC1310_IOID_SCL, IOC_NO_IOPULL);
+      printf("sda %i , scl %i \n", CC1310_IOID_SDA, CC1310_IOID_SCL);
+      ti_lib_ioc_pin_type_i2c(I2C0_BASE, CC1310_IOID_SDA, CC1310_IOID_SCL);
+    } else if(interface == BOARD_I2C_INTERFACE_1) {
+      ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SDA);
+      ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SCL);
+    }
+
+    /* Enable and initialize the I2C master module */
+    ti_lib_i2c_slave_init(I2C0_BASE, address);
   }
 }
 /*---------------------------------------------------------------------------*/

@@ -70,9 +70,11 @@ PROCESS_THREAD(saul, ev, data)
   printf("Initializing I2C manager and SPGBZ\n");
 
   init_spgbz();
-  init_i2c_bus_manager();
+  board_i2c_select_slave(BOARD_I2C_INTERFACE_0,0x10);
 
-  runTests();
+
+
+  //runTests();
 
 
   while(1){};
