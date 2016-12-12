@@ -360,20 +360,13 @@ board_i2c_select_slave(uint8_t new_interface, uint8_t address)
   if(new_interface != interface) {
     interface = new_interface;
 
-//    ti_lib_i2c_slave_disable(I2C0_BASE);
-
     if(interface == BOARD_I2C_INTERFACE_0) {
-      ti_lib_ioc_io_port_pull_set(CC1310_IOID_SDA, IOC_NO_IOPULL);
-      ti_lib_ioc_io_port_pull_set(CC1310_IOID_SCL, IOC_NO_IOPULL);
-      printf("sda %i , scl %i \n", CC1310_IOID_SDA, CC1310_IOID_SCL);
+// I did some comment out tests and the comm is working without the ioc_no_iopull stuff...
+//      ti_lib_ioc_io_port_pull_set(CC1310_IOID_SDA, IOC_NO_IOPULL);
+//      ti_lib_ioc_io_port_pull_set(CC1310_IOID_SCL, IOC_NO_IOPULL);
       ti_lib_ioc_pin_type_i2c(I2C0_BASE, CC1310_IOID_SDA, CC1310_IOID_SCL);
-    } else if(interface == BOARD_I2C_INTERFACE_1) {
-      ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SDA);
-      ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SCL);
     }
 
-    /* Enable and initialize the I2C master module */
-    ti_lib_i2c_slave_init(I2C0_BASE, address);
   }
 }
 /*---------------------------------------------------------------------------*/
