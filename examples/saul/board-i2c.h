@@ -58,6 +58,11 @@
 #define board_i2c_deselect() board_i2c_select(BOARD_I2C_INTERFACE_0, 0)
 /*---------------------------------------------------------------------------*/
 /**
+ * TODO: doc
+ */
+void board_i2c_select_slave(uint8_t new_interface, uint8_t address);
+
+/**
  * \brief Select an I2C slave
  * \param interface The I2C interface to be used (BOARD_I2C_INTERFACE_0 or _1)
  * \param slave_addr The slave's address

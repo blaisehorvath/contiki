@@ -360,7 +360,7 @@ board_i2c_select_slave(uint8_t new_interface, uint8_t address)
   if(new_interface != interface) {
     interface = new_interface;
 
-    ti_lib_i2c_master_disable(I2C0_BASE);
+//    ti_lib_i2c_slave_disable(I2C0_BASE);
 
     if(interface == BOARD_I2C_INTERFACE_0) {
       ti_lib_ioc_io_port_pull_set(CC1310_IOID_SDA, IOC_NO_IOPULL);

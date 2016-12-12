@@ -1,43 +1,3 @@
-/*
- * Copyright (c) 2006, Swedish Institute of Computer Science.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- * 3. Neither the name of the Institute nor the names of its contributors
- *    may be used to endorse or promote products derived from this software
- *    without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE INSTITUTE AND CONTRIBUTORS ``AS IS'' AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED.  IN NO EVENT SHALL THE INSTITUTE OR CONTRIBUTORS BE LIABLE
- * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
- * OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
- * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
- * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
- * SUCH DAMAGE.
- *
- * This file is part of the Contiki operating system.
- *
- */
-
-/**
- * \file
- *         A very simple Contiki application showing how Contiki programs look
- * \author
- *         Adam Dunkels <adam@sics.se>
- */
-
-
 #define ROM_BOOTLOADER_ENABLE                 1
 #define BOOTLOADER_ENABLE 0xC5
 #define BL_LEVEL 0x00
@@ -52,10 +12,27 @@
 #include "spgbz.h"
 #include "bus_manager.h"
 #include "tru2air_spi.h"
+
+// temporary includes
+#include "board-i2c.h"
+#include "ti-lib.h"
+#include <stdbool.h>
+#include "i2c.h"
 /*---------------------------------------------------------------------------*/
 
 /*-----------------------------------TESTS-----------------------------------*/
 #include "test_saul.h"
+#include "dev/leds.h"
+
+//TEMPORARY VARIABLES
+int slaveStatus;
+unsigned int i2c_received_data;
+#define CC1310_IOID_SDA 13
+#define CC1310_IOID_SCL 14
+#define NO_INTERFACE 0xFF
+static uint8_t slave_addr = 0x10;
+static uint8_t interface = BOARD_I2C_INTERFACE_0;
+
 
 
 /*---------------------------------------------------------------------------*/
@@ -63,22 +40,50 @@ PROCESS(saul, "saul");
 AUTOSTART_PROCESSES(&saul);
 /*---------------------------------------------------------------------------*/
 
+
+//void i2c_slave_data_isr () {
+//	i2c_received_data = ti_lib_i2c_slave_data_get(BOARD_I2C_INTERFACE_0);
+//	I2CSlaveIntClear(BOARD_I2C_INTERFACE_0, I2C_SLAVE_INT_DATA);
+//  	printf("int\n");
+//}
+
 PROCESS_THREAD(saul, ev, data)
 {
   PROCESS_BEGIN();
 
-  printf("Initializing I2C manager and SPGBZ\n");
-
-  init_spgbz();
-  board_i2c_select_slave(BOARD_I2C_INTERFACE_0,0x10);
+  board_i2c_select_slave(interface, slave_addr);
 
 
+  /* Polling */
+  while(1) {
+	i2c_received_data = ti_lib_i2c_slave_data_get(BOARD_I2C_INTERFACE_0);
+  }
 
-  //runTests();
 
 
-  while(1){};
 
   PROCESS_END();
-}
+  }
 /*---------------------------------------------------------------------------*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//    leds_arch_init();
+//  	leds_on(LEDS_BLUE);
+//  	int j=0;
+//  	while(++j < 1000000);
+//  	leds_off(LEDS_BLUE);
+  //runTests();
