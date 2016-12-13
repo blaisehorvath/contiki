@@ -20,7 +20,7 @@ void initSPISlave(void (spi_int_cb)()){
 			  ti_lib_sys_ctrl_clock_get(),
 			  SSI_FRF_MOTO_MODE_0,
 			  SSI_MODE_SLAVE,
-			  ti_lib_sys_ctrl_444clock_get()/16,
+			  ti_lib_sys_ctrl_clock_get()/16,
 			  8
 		  );
 

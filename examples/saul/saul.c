@@ -41,29 +41,27 @@ AUTOSTART_PROCESSES(&saul);
 /*---------------------------------------------------------------------------*/
 
 
-//void i2c_slave_data_isr () {
-//	i2c_received_data = ti_lib_i2c_slave_data_get(BOARD_I2C_INTERFACE_0);
-//	I2CSlaveIntClear(BOARD_I2C_INTERFACE_0, I2C_SLAVE_INT_DATA);
-//  	printf("int\n");
-//}
+void i2c_slave_data_isr () {
+	I2CSlaveIntClear(BOARD_I2C_INTERFACE_0, I2C_SLAVE_INT_DATA);
+	i2c_received_data = ti_lib_i2c_slave_data_get(BOARD_I2C_INTERFACE_0);
+	printf("int");
+}
 
 PROCESS_THREAD(saul, ev, data)
 {
   PROCESS_BEGIN();
 
+  IntMasterEnable();
+  printf("1");
+  I2CIntRegister(interface , i2c_slave_data_isr);
+  printf("2");
   board_i2c_select_slave(interface, slave_addr);
-
-
-  /* Polling */
-  while(1) {
-	i2c_received_data = ti_lib_i2c_slave_data_get(BOARD_I2C_INTERFACE_0);
-  }
-
-
-
-
+  printf("3");
+  I2CSlaveIntEnable(interface, I2C_SLAVE_INT_DATA);
+  printf("4");
+  while(1);
   PROCESS_END();
-  }
+}
 /*---------------------------------------------------------------------------*/
 
 
