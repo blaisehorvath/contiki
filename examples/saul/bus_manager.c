@@ -22,7 +22,6 @@ void requestData (uint8_t slave_addr) {
 }
 
 void init_i2c_bus_manager () {
-	leds_arch_init(); //for debugging
 
 	int i;
 	for (i = 0; i<127; i++) {

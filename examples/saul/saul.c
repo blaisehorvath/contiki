@@ -26,13 +26,12 @@
 
 
 /* Globals */
-unsigned int master_dev_id;
 unsigned char master_dev_id_buff[4];
-unsigned char rec_bytes = 0;
+volatile unsigned int master_dev_id = 0;
+unsigned char rec_bytes = 4;
+volatile unsigned char sensor_node_i2c_id = 0;
 
 //TEMPORARY VARIABLES
-int slaveStatus;
-unsigned int i2c_received_data;
 #define CC1310_IOID_SDA 13
 #define CC1310_IOID_SCL 14
 #define NO_INTERFACE 0xFF
@@ -63,13 +62,18 @@ void i2c_slave_data_isr () {
 	int i =0;
 	i++;
 
-	// If the first byte (FBR) or any write byte arrived from the master
+	// If the first byte (FBR) or any master written byte arrived from the master
 	if( (I2C_SLAVE_ACT_RREQ_FBR | I2C_SLAVE_ACT_RREQ) & ss) {
-		master_dev_id_buff[3-rec_bytes++] = (unsigned char) I2CSlaveDataGet(I2C0_BASE);
+		master_dev_id_buff[--rec_bytes] = (unsigned char) I2CSlaveDataGet(I2C0_BASE);
+		if (rec_bytes == 0) {
+			rec_bytes = 4;
+			memcpy(&master_dev_id, master_dev_id_buff, 4);
+			sensor_node_i2c_id = register_i2c_device(master_dev_id);
+		}
 	}
 	// If a read byte request came from the master
-	else if ( I2C_SLAVE_ACT_TREQ & ss) {
-		I2CSlaveDataPut(I2C0_BASE, 0xde);
+	else if ( I2C_SLAVE_ACT_TREQ & ss ) {
+		I2CSlaveDataPut(I2C0_BASE, sensor_node_i2c_id);
 	}
 
 	//TODO: make an else for error handling
@@ -82,6 +86,10 @@ PROCESS_THREAD(saul, ev, data)
 
   /* Initing the Tru2Air Bus Manager */
   init_i2c_bus_manager();
+
+//  leds_arch_init(); //for debugging
+//  leds_on(LEDS_GREEN);
+//  leds_on(LEDS_RED);
 
   /* Delay 1 second */
   etimer_set(&et, CLOCK_SECOND);
@@ -118,22 +126,11 @@ PROCESS_THREAD(saul, ev, data)
 
 
   printf("slave init\n");
-  int i = 0;
+
   while(1) {
-//	  printf("master send bytes 0x%02x 0x%02x 0x%02x 0x%02x \n", master_dev_id_buff[0],master_dev_id_buff[1],master_dev_id_buff[2],master_dev_id_buff[3]);
-	  printf("master dev id 0x%08x \n", *((unsigned int*)master_dev_id_buff));
+	  printf("master dev id: 0x%08x i2c_id: 0x%02x \n", master_dev_id, sensor_node_i2c_id);
   }
 
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
-
-
-
-
-//    leds_arch_init();
-//  	leds_on(LEDS_BLUE);
-//  	int j=0;
-//  	while(++j < 1000000);
-//  	leds_off(LEDS_BLUE);
-  //runTests();

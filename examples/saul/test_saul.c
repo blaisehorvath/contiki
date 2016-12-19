@@ -66,9 +66,13 @@ _Bool testBoardManInit () {
 }
 
 _Bool testBoardManAddItem () {
-	register_i2c_device(123123);
-	register_i2c_device(124124);
-	register_i2c_device(123123);
+	unsigned int a,b,c;
+	a = register_i2c_device(123123);
+	b = register_i2c_device(124124);
+	c = register_i2c_device(123123);
+
+	if (a!=1 || b!=2 || c!=1 ) return (_Bool)0;
+
 	int i =0;
 	if (i2c_devices[0]==0 && i2c_devices[3]==0) i++;
 	if (i2c_devices[1]==123123) i++;
