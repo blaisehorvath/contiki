@@ -130,12 +130,12 @@ PROCESS_THREAD(saul, ev, data)
 					disable_i2c_slave();
 					printf("disabling i2c slave \n");
 
-//					// Wake up as master
-//					board_i2c_select(BOARD_I2C_INTERFACE_0, sensor_node_i2c_id);
-//					board_i2c_read(buff,1);
-//					board_i2c_shutdown();
-//					printf("Recieved data from arduino slave: 0x%02x \n", buff[0]);
-//
+					// Wake up as master
+					board_i2c_select(BOARD_I2C_INTERFACE_0, sensor_node_i2c_id);
+					board_i2c_read(buff,1);
+					board_i2c_shutdown();
+					printf("Recieved data from arduino slave: 0x%02x \n", buff[0]);
+
 //					sensor_node_i2c_id = 0;
 //
 					STATE = 5;
