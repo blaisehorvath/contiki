@@ -23,10 +23,29 @@ void setup() {
   Serial.print("received i2c ID: ");
   Serial.print(I2C_SLAVE_ADDRESS, HEX);
   Serial.print("\n");
+  //TODO: handle when no proper i2c id was received
+  
+  Wire.begin(I2C_SLAVE_ADDRESS);
+  Serial.print("Started i2c slave on: 0x");
+  Serial.print(I2C_SLAVE_ADDRESS, HEX);
+  Serial.print("\n");
+  Wire.onReceive(receiveCb);
+  Wire.onRequest(requestCb);
 }
-
-byte x = 0;
 
 void loop() {
   delay(500);
+}
+
+void receiveCb(int fasz) {
+  unsigned char data = Wire.read();
+  Serial.print("Received data from master: ");
+  Serial.print(data);
+  Serial.print("\n");
+}
+
+void requestCb() {
+  Serial.print("Received request from master!");
+  Wire.write(0xfa);
+  Serial.print("\n");
 }
