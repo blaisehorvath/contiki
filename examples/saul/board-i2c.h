@@ -58,6 +58,11 @@
 #define board_i2c_deselect() board_i2c_select(BOARD_I2C_INTERFACE_0, 0)
 /*---------------------------------------------------------------------------*/
 /**
+ * By Blaise
+ * TODO: doc
+ */
+void disable_i2c_slave();
+/**
  * TODO: doc
  */
 void board_i2c_select_slave(uint8_t new_interface, uint8_t address);

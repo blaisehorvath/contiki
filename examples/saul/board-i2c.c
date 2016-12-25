@@ -371,3 +371,32 @@ board_i2c_select_slave(uint8_t new_interface, uint8_t address)
 }
 /*---------------------------------------------------------------------------*/
 /** @} */
+
+// By Blaise
+
+void disable_i2c_slave() {
+	if (accessible()) {
+		I2CSlaveDisable(I2C0_BASE);
+	}
+
+	PRCMPeripheralRunDisable(PRCM_PERIPH_I2C0);
+	PRCMLoadSet();
+	while (!PRCMLoadGet());
+
+	/*
+	 * Set all pins to GPIO Input and disable the output driver. Set internal
+	 * pull to match external pull
+	 *
+	 * SDA and SCL: external PU resistor
+	 * SDA HP and SCL HP: MPU PWR low
+	 */
+	//  ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SDA_HP);
+	//  ti_lib_ioc_io_port_pull_set(CC1310_IOID_SDA_HP, IOC_IOPULL_DOWN);
+	//  ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SCL_HP);
+	//  ti_lib_ioc_io_port_pull_set(CC1310_IOID_SCL_HP, IOC_IOPULL_DOWN);
+	ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SDA);
+	ti_lib_ioc_io_port_pull_set(CC1310_IOID_SDA, IOC_IOPULL_UP);
+	ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SCL);
+	ti_lib_ioc_io_port_pull_set(CC1310_IOID_SCL, IOC_IOPULL_UP);
+}
+

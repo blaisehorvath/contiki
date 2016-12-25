@@ -123,10 +123,13 @@ PROCESS_THREAD(saul, ev, data)
 
 				if (sensor_node_i2c_id) {
 //
-//					//Unregister the slave interrupt and turn off the slave mode
-//					I2CIntUnregister(I2C0_BASE);
-//					board_i2c_shutdown();
-//
+					//Unregister the slave interrupt and turn off the slave mode
+					I2CIntUnregister(I2C0_BASE);
+					printf("unregistered the slave interrupts \n");
+
+					disable_i2c_slave();
+					printf("disabling i2c slave \n");
+
 //					// Wake up as master
 //					board_i2c_select(BOARD_I2C_INTERFACE_0, sensor_node_i2c_id);
 //					board_i2c_read(buff,1);
@@ -184,4 +187,7 @@ void init_i2c_slave() {
 
   printf("slave init\n");
 }
+
+
+
 
