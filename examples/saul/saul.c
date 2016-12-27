@@ -12,6 +12,7 @@
 #include "spgbz.h"
 #include "bus_manager.h"
 #include "tru2air_spi.h"
+#include "tru2air_i2c_com.h"
 
 // temporary includes
 #include "board-i2c.h"
@@ -30,11 +31,12 @@ unsigned char master_dev_id_buff[4];
 volatile unsigned int sensor_node_dev_id = 0;
 unsigned char rec_bytes = 4;
 volatile unsigned char sensor_node_i2c_id = 0;
-unsigned char buff [0];
+unsigned char buff [5];
 
 /* States */
-enum states {I2C_SLAVE, DEVICE_INIT };
+enum states {I2C_SLAVE, DEVICE_INIT, DEBUG };
 volatile enum states STATE = I2C_SLAVE;
+enum I2C_COMM_PROT_HEADER comm_type = GET_SENSACT_NUM;
 
 //TEMPORARY VARIABLES
 #define CC1310_IOID_SDA 13
@@ -43,6 +45,7 @@ volatile enum states STATE = I2C_SLAVE;
 static uint8_t slave_addr = 0x10;
 static uint8_t interface = BOARD_I2C_INTERFACE_0;
 void init_i2c_slave();
+void clearBuffer();
 unsigned int fasz1 = 0xdededede;
 unsigned char fasz2 = 0x00;
 unsigned char debug_initiated_i2c = 0;
@@ -56,7 +59,6 @@ AUTOSTART_PROCESSES(&saul);
 
 
 void i2c_slave_data_isr () {
-
 	// Reading the Slave Status
 	uint32_t ss = I2CSlaveStatus(I2C0_BASE);
 
@@ -122,7 +124,7 @@ PROCESS_THREAD(saul, ev, data)
 	  	  case ( DEVICE_INIT ):
 
 				if (sensor_node_i2c_id) {
-//
+
 					//Unregister the slave interrupt and turn off the slave mode
 					I2CIntUnregister(I2C0_BASE);
 					printf("unregistered the slave interrupts \n");
@@ -132,13 +134,12 @@ PROCESS_THREAD(saul, ev, data)
 
 					// Wake up as master
 					board_i2c_select(BOARD_I2C_INTERFACE_0, sensor_node_i2c_id);
-					board_i2c_read(buff,1);
+					board_i2c_write_single(GET_SENSACT_NUM);
+					clearBuffer();
+					board_i2c_read(buff,5);
 					board_i2c_shutdown();
-					printf("Recieved data from arduino slave: 0x%02x \n", buff[0]);
 
-//					sensor_node_i2c_id = 0;
-//
-					STATE = 5;
+					STATE = DEBUG;
 				}
 	  			break;
 
@@ -188,6 +189,11 @@ void init_i2c_slave() {
   printf("slave init\n");
 }
 
-
+void clearBuffer() {
+	unsigned char i;
+	for(i=0 ; i<5; i++ ) {
+		buff[i]=0;
+	}
+}
 
 

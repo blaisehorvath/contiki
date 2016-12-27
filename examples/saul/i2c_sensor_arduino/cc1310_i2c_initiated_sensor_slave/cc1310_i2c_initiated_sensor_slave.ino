@@ -1,6 +1,18 @@
 #include <Wire.h>
 
+//STATES
+//communication states
+enum I2C_COMM_PROT_HEADER {GET_SENSACT_NUM, GET_SENSOR_DESC, SENSOR_READ, SENS_ACT_WRITE};
+
 unsigned char I2C_SLAVE_ADDRESS = 0;
+unsigned char ii = 0;
+unsigned char message[] = {0xde, 0xad, 0xbe, 0xaf, 0x05};
+
+//TEMPORARY DUMMY VARIABLES
+byte SENS_NUM = 0x03;
+typedef unsigned char sensor_name_t[24];
+sensor_name_t sensors[] = {"1st_sensor", "2nd_sensor", "3rd_sensor"};
+
 
 void setup() {
   Serial.begin(9600);  // start serial for output
@@ -20,14 +32,11 @@ void setup() {
     I2C_SLAVE_ADDRESS = Wire.read(); // receive a byte as characterl
   }
   
-  Serial.print("received i2c ID: ");
-  Serial.print(I2C_SLAVE_ADDRESS, HEX);
-  Serial.print("\n");
   //TODO: handle when no proper i2c id was received
   
   Wire.begin(I2C_SLAVE_ADDRESS);
-  Serial.print("Started i2c slave on: 0x");
-  Serial.print(I2C_SLAVE_ADDRESS, HEX);
+  Serial.print("[I2C SLAVE INIT] Started i2c slave on: ");
+  printHex4(&I2C_SLAVE_ADDRESS);
   Serial.print("\n");
   Wire.onReceive(receiveCb);
   Wire.onRequest(requestCb);
@@ -39,13 +48,28 @@ void loop() {
 
 void receiveCb(int fasz) {
   unsigned char data = Wire.read();
-  Serial.print("Received data from master: ");
-  Serial.print(data);
+  Serial.print("[INCOMING DATA] ");
+  Serial.print("Receieved: ");
+  printHex4(&data);
   Serial.print("\n");
+  
+  switch(data) {
+    case GET_SENSACT_NUM:
+      Serial.print("[SWITCH TO STATE] -> GET_SENSACT_NUM \n");
+      break;
+    default:
+      Serial.print("[ERROR] Invalid state receieved! \n");
+  }
 }
 
 void requestCb() {
-  Serial.print("Received request from master!");
-  Wire.write(0xfa);
+  Serial.print("[DATA REQUEST]");
+  Wire.write(message, 5);
   Serial.print("\n");
+}
+
+void printHex4 (byte* data) {
+    char tmp[4];
+    sprintf(tmp, "0x%02x", *data);
+    Serial.print(tmp);
 }
