@@ -7,6 +7,12 @@ enum I2C_COMM_PROT_HEADER {GET_SENSACT_NUM, GET_SENSOR_DESC, SENSOR_READ, SENS_A
 unsigned char I2C_SLAVE_ADDRESS = 0;
 unsigned char ii = 0;
 unsigned char message[] = {0xde, 0xad, 0xbe, 0xaf, 0x05};
+typedef struct tru2air_header_t {
+  unsigned char action;
+  unsigned char specifier;
+} tru2air_header_t;
+
+tru2air_header_t HEADER = {0xff,0xff};
 
 //TEMPORARY DUMMY VARIABLES
 byte SENS_NUM = 0x03;
@@ -35,7 +41,7 @@ void setup() {
   //TODO: handle when no proper i2c id was received
   
   Wire.begin(I2C_SLAVE_ADDRESS);
-  Serial.print("[I2C SLAVE INIT] Started i2c slave on: ");
+  Serial.print("[I2C SLAVE] Started i2c slave on: ");
   printHex4(&I2C_SLAVE_ADDRESS);
   Serial.print("\n");
   Wire.onReceive(receiveCb);
@@ -46,20 +52,26 @@ void loop() {
   delay(500);
 }
 
-void receiveCb(int fasz) {
-  unsigned char data = Wire.read();
-  Serial.print("[INCOMING DATA] ");
-  Serial.print("Receieved: ");
-  printHex4(&data);
-  Serial.print("\n");
+void receiveCb(int numBytes) {
+  Serial.print("[DATA RECEIVED]");
   
-  switch(data) {
+  HEADER.action = Wire.read();
+  
+  if(numBytes == 2) {
+    HEADER.specifier = Wire.read();
+
+  }
+  
+  switch(HEADER.action) {
     case GET_SENSACT_NUM:
       Serial.print("[SWITCH TO STATE] -> GET_SENSACT_NUM \n");
       break;
     default:
       Serial.print("[ERROR] Invalid state receieved! \n");
   }
+  
+  HEADER.action = 0xff;
+  HEADER.specifier = 0xff;
 }
 
 void requestCb() {
@@ -72,4 +84,12 @@ void printHex4 (byte* data) {
     char tmp[4];
     sprintf(tmp, "0x%02x", *data);
     Serial.print(tmp);
+}
+
+void printHEADER() {
+  Serial.print("ACTION is: ");
+  printHex4(&(HEADER.action));
+  Serial.print(" SPECIFIER is: ");
+  printHex4(&(HEADER.specifier));
+  Serial.print("\n");
 }
