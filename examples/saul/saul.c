@@ -25,6 +25,9 @@
 #include "test_saul.h"
 #include "dev/leds.h"
 
+/* Tru2Air protocol defines */
+#define TRU2AIR_HEADER_BUFF_LENGTH 2
+
 
 /* Globals */
 unsigned char master_dev_id_buff[4];
@@ -36,11 +39,26 @@ typedef struct tru2air_sensor_t {
     unsigned char sensact_num;
 } tru2air_sensor_t;
 volatile tru2air_sensor_t DEVICE = {0,0,0};
+unsigned char currentSensor = 0; //TODO: reset on the proper place
+
+/**
+ * A stuct that hold an action (see I2C_COMM_PROT_ACTION and e specifier.
+ * The specifier specifies the target of the action.
+ */
+typedef struct tru2air_header_t {
+  unsigned char action;
+  unsigned char specifier;
+} tru2air_header_t;
+tru2air_header_t HEADER;
+
+/* BUFFERS */
+unsigned char headerBuff[2];
+unsigned char nameBuff[23];
 
 /* States */
 enum states {I2C_SLAVE_INIT, I2C_MASTER_INIT, GET_SENSACT_INFO, DEBUG };
 volatile enum states STATE = I2C_SLAVE_INIT;
-enum I2C_COMM_PROT_HEADER comm_type = GET_SENSACT_NUM;
+enum I2C_COMM_PROT_ACTION comm_type = GET_SENSACT_NUM;
 
 //TEMPORARY VARIABLES
 #define CC1310_IOID_SDA 13
@@ -134,11 +152,11 @@ PROCESS_THREAD(saul, ev, data)
 
 					// Wake up as master
 					board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
-					unsigned char sendBuff[] = {GET_SENSACT_NUM, 0xaa};
-					board_i2c_write(sendBuff, 2);
+					board_i2c_write_single(GET_SENSACT_NUM);
 					clearBuffer();
 					board_i2c_read(buff,5); //TODO: error handling, check if the dev address is valid and maybe if the SENSACT num is >0?
 					DEVICE.sensact_num = buff[4];
+					currentSensor = 0;
 					board_i2c_shutdown();
 
 					printf("[INFO] tru2air sensor node: 0x%08x has 0x%02x sensors\n", DEVICE.dev_addr, DEVICE.sensact_num);
@@ -148,13 +166,17 @@ PROCESS_THREAD(saul, ev, data)
 	  			break;
 
 	  	  case ( GET_SENSACT_INFO ):
+	  			headerBuff[0] = GET_SENSOR_DESC;
+	  	  	  	headerBuff[1] = currentSensor;
+	  	  	  	if (++currentSensor == DEVICE.sensact_num) STATE = 5;
+
+
 				printf("[STATE] -> GET_SENSACT INFO\n");
 
 				board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
-				board_i2c_write_single( GET_SENSOR_DESC );
-				clearBuffer();
+				board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_LENGTH);
+				board_i2c_read(nameBuff,23);
 				board_i2c_shutdown();
-				STATE = 5;
 				break;
 
 	  	  default:
