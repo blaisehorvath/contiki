@@ -134,7 +134,8 @@ PROCESS_THREAD(saul, ev, data)
 
 					// Wake up as master
 					board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
-					board_i2c_write_single(GET_SENSACT_NUM);
+					unsigned char sendBuff[] = {GET_SENSACT_NUM, 0xaa};
+					board_i2c_write(sendBuff, 2);
 					clearBuffer();
 					board_i2c_read(buff,5); //TODO: error handling, check if the dev address is valid and maybe if the SENSACT num is >0?
 					DEVICE.sensact_num = buff[4];
@@ -142,19 +143,19 @@ PROCESS_THREAD(saul, ev, data)
 
 					printf("[INFO] tru2air sensor node: 0x%08x has 0x%02x sensors\n", DEVICE.dev_addr, DEVICE.sensact_num);
 
-					STATE = 5;
+					STATE = GET_SENSACT_INFO;
 				}
 	  			break;
 
-	  	  case (GET_SENSACT_INFO):
-//				printf("[STATE] -> GET_SENSACT INFO\n");
-//
-//				board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
-//				board_i2c_write_single(GET_SENSACT_NUM);
-//				clearBuffer();
-//				board_i2c_shutdown();
-//				STATE = 5;
-//				break;
+	  	  case ( GET_SENSACT_INFO ):
+				printf("[STATE] -> GET_SENSACT INFO\n");
+
+				board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
+				board_i2c_write_single( GET_SENSOR_DESC );
+				clearBuffer();
+				board_i2c_shutdown();
+				STATE = 5;
+				break;
 
 	  	  default:
 	  		  if ((++i % 5000000) == 0 ) printf("[STATE] -> DEFAULT\n[INFO] tru2air sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);

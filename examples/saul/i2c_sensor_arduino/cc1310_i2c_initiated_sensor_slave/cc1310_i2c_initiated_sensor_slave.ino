@@ -3,10 +3,10 @@
 //STATES
 //communication states
 enum I2C_COMM_PROT_HEADER {GET_SENSACT_NUM, GET_SENSOR_DESC, SENSOR_READ, SENS_ACT_WRITE};
+byte STATE = GET_SENSACT_NUM;
 
 unsigned char I2C_SLAVE_ADDRESS = 0;
-unsigned char ii = 0;
-unsigned char message[] = {0xde, 0xad, 0xbe, 0xaf, 0x05};
+
 typedef struct tru2air_header_t {
   unsigned char action;
   unsigned char specifier;
@@ -18,6 +18,7 @@ tru2air_header_t HEADER = {0xff,0xff};
 byte SENS_NUM = 0x03;
 typedef unsigned char sensor_name_t[24];
 sensor_name_t sensors[] = {"1st_sensor", "2nd_sensor", "3rd_sensor"};
+unsigned char device_addr[] = {0xde, 0xad, 0xbe, 0xef};
 
 
 void setup() {
@@ -41,9 +42,9 @@ void setup() {
   //TODO: handle when no proper i2c id was received
   
   Wire.begin(I2C_SLAVE_ADDRESS);
-  Serial.print("[I2C SLAVE] Started i2c slave on: ");
-  printHex4(&I2C_SLAVE_ADDRESS);
-  Serial.print("\n");
+  //Serial.print("[I2C SLAVE] Started i2c slave on: ");
+  //printHex4(&I2C_SLAVE_ADDRESS);
+  //Serial.print("\n");
   Wire.onReceive(receiveCb);
   Wire.onRequest(requestCb);
 }
@@ -53,21 +54,25 @@ void loop() {
 }
 
 void receiveCb(int numBytes) {
-  Serial.print("[DATA RECEIVED]");
+  Serial.print("[DATA RECEIVED]\n");
   
   HEADER.action = Wire.read();
   
   if(numBytes == 2) {
     HEADER.specifier = Wire.read();
-
   }
   
   switch(HEADER.action) {
     case GET_SENSACT_NUM:
-      Serial.print("[SWITCH TO STATE] -> GET_SENSACT_NUM \n");
+      Serial.print("[STATE] -> GET_SENSACT_NUM \n");
+      STATE = GET_SENSACT_NUM;
+      break;
+    case GET_SENSOR_DESC:
+      Serial.print("[STATE] -> GET_SENSOR_DESC \n");
+      STATE = GET_SENSOR_DESC;
       break;
     default:
-      Serial.print("[ERROR] Invalid state receieved! \n");
+      Serial.print("[ERROR] Invalid state receieved! -> ");
   }
   
   HEADER.action = 0xff;
@@ -75,21 +80,21 @@ void receiveCb(int numBytes) {
 }
 
 void requestCb() {
-  Serial.print("[DATA REQUEST]");
-  Wire.write(message, 5);
-  Serial.print("\n");
+  switch(STATE){
+    case GET_SENSACT_NUM:
+      Wire.write(device_addr, 4);
+      Wire.write(sizeof(sensors)/sizeof(sensor_name_t));
+      break;
+    case GET_SENSOR_DESC:
+      break;
+    default:
+      break;
+  }
+  //Serial.print("[DATA REQUEST]\n");
 }
 
 void printHex4 (byte* data) {
     char tmp[4];
     sprintf(tmp, "0x%02x", *data);
     Serial.print(tmp);
-}
-
-void printHEADER() {
-  Serial.print("ACTION is: ");
-  printHex4(&(HEADER.action));
-  Serial.print(" SPECIFIER is: ");
-  printHex4(&(HEADER.specifier));
-  Serial.print("\n");
 }
