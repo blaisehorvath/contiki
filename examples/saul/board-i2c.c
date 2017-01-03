@@ -400,3 +400,41 @@ void disable_i2c_slave() {
 	ti_lib_ioc_io_port_pull_set(CC1310_IOID_SCL, IOC_IOPULL_UP);
 }
 
+
+bool board_i2c_read_until(uint8_t *data, char end)
+{
+  uint8_t i;
+  bool success;
+  bool isLastChar = false;
+
+  /* Set slave address */
+  ti_lib_i2c_master_slave_addr_set(I2C0_BASE, slave_addr, true);
+
+  /* Check if another master has access */
+  while(ti_lib_i2c_master_bus_busy(I2C0_BASE));
+
+  /* Assert RUN + START + ACK */
+  ti_lib_i2c_master_control(I2C0_BASE, I2C_MASTER_CMD_BURST_RECEIVE_START);
+
+
+  i = 0;
+  success = true;
+  while(!isLastChar && success) {
+    while(ti_lib_i2c_master_busy(I2C0_BASE));
+    success = i2c_status();
+    if(success) {
+      data[i] = ti_lib_i2c_master_data_get(I2C0_BASE);
+      if(data[i] != end) {
+		ti_lib_i2c_master_control(I2C0_BASE, I2C_MASTER_CMD_BURST_RECEIVE_CONT);
+		i++;
+      }
+      else {
+		ti_lib_i2c_master_control(I2C0_BASE, I2C_MASTER_CMD_BURST_RECEIVE_FINISH);
+		while(ti_lib_i2c_master_bus_busy(I2C0_BASE));
+    	isLastChar = true;
+      }
+    }
+  }
+  return success;
+}
+

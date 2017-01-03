@@ -2,7 +2,13 @@
 
 //STATES
 //communication states
-enum I2C_COMM_PROT_HEADER {GET_SENSACT_NUM, GET_SENSOR_DESC, SENSOR_READ, SENS_ACT_WRITE};
+enum I2C_COMM_PROT_ACTION {GET_SENSACT_NUM, GET_SENSOR_NAME, GET_SENSOR_TYPE, SENSOR_READ, SENS_ACT_WRITE};
+
+// Sensor return types
+enum TRU2AIR_SENSOR_DATA_TYPE {SENS_DOUBLE, SENS_UINT32 };
+
+
+
 byte STATE = GET_SENSACT_NUM;
 
 unsigned char I2C_SLAVE_ADDRESS = 0;
@@ -14,10 +20,15 @@ typedef struct tru2air_header_t {
 
 tru2air_header_t HEADER = {0xff,0xff};
 
+typedef struct sensact_descriptor_t {
+  unsigned char name [24];
+  unsigned char type;
+} sensact_descriptor_t;
+
+
 //TEMPORARY DUMMY VARIABLES
 byte SENS_NUM = 0x03;
-typedef unsigned char sensor_name_t[24];
-sensor_name_t sensors[] = {"1st_sensor", "2nd_sensor", "3rd_sensor"};
+sensact_descriptor_t sensors[] = {{"1_st_sensor", SENS_DOUBLE}, {"2_nd_sensor", SENS_DOUBLE}, {"3_rd_sensor", SENS_UINT32}};
 unsigned char device_addr[] = {0xde, 0xad, 0xbe, 0xef};
 
 
@@ -46,6 +57,7 @@ void setup() {
   //Serial.print("[I2C SLAVE] Started i2c slave on: ");
   //printHex4(&I2C_SLAVE_ADDRESS);
   //Serial.print("\n");
+  
   Wire.onReceive(receiveCb);
   Wire.onRequest(requestCb);
 }
@@ -55,7 +67,7 @@ void loop() {
 }
 
 void receiveCb(int numBytes) {
-  Serial.print("[DATA RECEIVED]\n");
+//  Serial.print("[DATA RECEIVED]\n");
 
   // reseting the specifier if there is any
   HEADER.specifier = 0xff;
@@ -66,14 +78,21 @@ void receiveCb(int numBytes) {
     HEADER.specifier = Wire.read();
   }
   
+//  Serial.print(HEADER.action);
+//  Serial.print("\n");
+  
   switch(HEADER.action) {
     case GET_SENSACT_NUM:
 //      Serial.print("[STATE] -> GET_SENSACT_NUM \n");
       STATE = GET_SENSACT_NUM;
       break;
-    case GET_SENSOR_DESC:
-//      Serial.print("[STATE] -> GET_SENSOR_DESC \n");
-      STATE = GET_SENSOR_DESC;
+    case GET_SENSOR_NAME:
+//      Serial.print("[STATE] -> GET_SENSOR_NAME \n");
+      STATE = GET_SENSOR_NAME;
+      break;
+    case GET_SENSOR_TYPE:
+//      Serial.print("[STATE] -> GET_SENSOR_TYPE");
+      STATE = GET_SENSOR_TYPE;
       break;
     default:
 //      Serial.print("[ERROR] Invalid state receieved! -> ");
@@ -83,33 +102,26 @@ void receiveCb(int numBytes) {
 }
 
 void requestCb() {
-  Serial.print("[REQUEST]\n");
+//  Serial.print("[REQUEST]\n");
   bool endOfMsg = false;
   unsigned char msgChar = 0;
 
-  switch(STATE){
+  switch(STATE) {
     case GET_SENSACT_NUM:
       Wire.write(device_addr, 4);
-      Wire.write(sizeof(sensors)/sizeof(sensor_name_t));
+      Wire.write(sizeof(sensors)/sizeof(sensact_descriptor_t));
       break;
-    case GET_SENSOR_DESC:
+    case GET_SENSOR_NAME:
       //TODO: handle bad HEADER
   
-      Wire.write((char*)(sensors[HEADER.specifier]));
+      Wire.write((char*)(sensors[HEADER.specifier].name));
       Wire.write('\0');
       
-      /*
-      while (!endOfMsg) {
-        if (sensors[HEADER.specifier][msgChar] != '\0') {
-          Wire.write((char)sensors[HEADER.specifier][msgChar]);
-          msgChar++;
-        }
-        else {
-          Wire.write('\0');
-          endOfMsg = true;
-        };
-      };
-      */
+      break;
+      
+    case GET_SENSOR_TYPE:
+      Serial.print(sizeof(sensors[HEADER.specifier].type));
+      Wire.write(sensors[HEADER.specifier].type);
       break;
       
     default:

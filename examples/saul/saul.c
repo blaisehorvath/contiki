@@ -26,8 +26,8 @@
 #include "dev/leds.h"
 
 /* Tru2Air protocol defines */
-#define TRU2AIR_HEADER_BUFF_LENGTH 2
-
+#define TRU2AIR_HEADER_BUFF_SIZE 2
+#define TRU2AIR_SENSOR_RETURN_TYPE_SIZE 1
 
 /* Globals */
 unsigned char master_dev_id_buff[4];
@@ -54,10 +54,11 @@ tru2air_header_t HEADER;
 /* BUFFERS */
 unsigned char headerBuff[2];
 unsigned char nameBuff[23];
+unsigned char typeBuff[2];
 
 /* States */
-enum states {I2C_SLAVE_INIT, I2C_MASTER_INIT, GET_SENSACT_INFO, DEBUG };
-volatile enum states STATE = I2C_SLAVE_INIT;
+enum states {NODE_I2C_SLAVE_INIT, NODE_I2C_MASTER_INIT, REQUIRE_SENSACT_NAME, REQUIRE_SENSOR_RETURN_TYPE, DEBUG };
+volatile enum states STATE = NODE_I2C_SLAVE_INIT;
 enum I2C_COMM_PROT_ACTION comm_type = GET_SENSACT_NUM;
 
 //TEMPORARY VARIABLES
@@ -102,7 +103,7 @@ void i2c_slave_data_isr () {
 		I2CSlaveDataPut(I2C0_BASE, DEVICE.i2c_addr);
 
 		// switching state to DEVICE init
-		STATE = I2C_MASTER_INIT;
+		STATE = NODE_I2C_MASTER_INIT;
 	}
 
 	//TODO: make an else for error handling
@@ -134,12 +135,12 @@ PROCESS_THREAD(saul, ev, data)
   int i = 0;
   while(1) {
 	  switch (STATE) {
-	  	  case ( I2C_SLAVE_INIT ):
+	  	  case ( NODE_I2C_SLAVE_INIT ):
 	  			break;
 
-	  	  case ( I2C_MASTER_INIT ):
+	  	  case ( NODE_I2C_MASTER_INIT ):
 
-				printf("[STATE] -> I2C_MASTER_INIT\n");
+				printf("[STATE] -> NODE_I2C_MASTER_INIT\n");
 
 				if (DEVICE.i2c_addr) {
 
@@ -161,23 +162,44 @@ PROCESS_THREAD(saul, ev, data)
 
 					printf("[INFO] tru2air sensor node: 0x%08x has 0x%02x sensors\n", DEVICE.dev_addr, DEVICE.sensact_num);
 
-					STATE = GET_SENSACT_INFO;
+					STATE = REQUIRE_SENSACT_NAME;
 				}
 	  			break;
 
-	  	  case ( GET_SENSACT_INFO ):
-	  			headerBuff[0] = GET_SENSOR_DESC;
+	  	  case ( REQUIRE_SENSACT_NAME ):
+	  			headerBuff[0] = GET_SENSOR_NAME;
 	  	  	  	headerBuff[1] = currentSensor;
-	  	  	  	if (++currentSensor == DEVICE.sensact_num) STATE = 5;
+	  	  	  	if (++currentSensor == DEVICE.sensact_num) {
+	  	  	  		STATE = REQUIRE_SENSOR_RETURN_TYPE;
+	  	  	  		currentSensor = 0;
+	  	  	  	}
 
 
-				printf("[STATE] -> GET_SENSACT INFO\n");
+				printf("[STATE] -> GET_SENSOR_NAME\n");
 
 				board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
-				board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_LENGTH);
-				board_i2c_read(nameBuff,23);
+				board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_SIZE);
+				board_i2c_read_until(nameBuff,'\0');
 				board_i2c_shutdown();
+
 				break;
+
+	  	  case ( REQUIRE_SENSOR_RETURN_TYPE ):
+
+	  			headerBuff[0] = GET_SENSOR_TYPE;
+	  	  	  	headerBuff[1] = currentSensor;
+	  	  	  	if (++currentSensor == DEVICE.sensact_num) {
+	  	  	  		currentSensor = 0;
+	  	  	  		STATE = 5;
+	  	  	  	}
+
+				printf("[STATE] -> GET_SENSOR_TYPE");
+				board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
+//				board_i2c_write_read(headerBuff, TRU2AIR_HEADER_BUFF_SIZE, typeBuff, 2);//TRU2AIR_SENSOR_RETURN_TYPE_SIZE);
+				board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_SIZE);
+				board_i2c_read(typeBuff,1);
+				board_i2c_shutdown();
+	  			break;
 
 	  	  default:
 	  		  if ((++i % 5000000) == 0 ) printf("[STATE] -> DEFAULT\n[INFO] tru2air sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
@@ -191,7 +213,7 @@ PROCESS_THREAD(saul, ev, data)
 
 void init_i2c_slave() {
 	/* Initing the slave module */
-	printf("[STATE] -> I2C_SLAVE_INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
+	printf("[STATE] -> NODE_I2C_SLAVE_INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
 
 	/* First, make sure the SERIAL PD is on */
 	PRCMPowerDomainOn(PRCM_DOMAIN_SERIAL);

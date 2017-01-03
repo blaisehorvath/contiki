@@ -59,6 +59,8 @@
 /*---------------------------------------------------------------------------*/
 /**
  * By Blaise
+ */
+/*
  * TODO: doc
  */
 void disable_i2c_slave();
@@ -66,6 +68,13 @@ void disable_i2c_slave();
  * TODO: doc
  */
 void board_i2c_select_slave(uint8_t new_interface, uint8_t address);
+
+/**
+ * TODO: doc
+ */
+bool board_i2c_read_until(uint8_t *data, char end);
+
+/*---------------------------------------------------------------------------*/
 
 /**
  * \brief Select an I2C slave
