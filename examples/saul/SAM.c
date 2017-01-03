@@ -1,40 +1,13 @@
-/*
-       .--..--..--..--..--..--.
-    .' \  (`._   (_)     _   \
-  .'    |  '._)         (_)  |
-  \ _.')\      .----..---.   /
-  |(_.'  |    /    .-\-.  \  |
-  \     0|    |   ( O| O) | o|
-   |  _  |  .--.____.'._.-.  |
-   \ (_) | o         -` .-`  |
-    |    \   |`-._ _ _ _ _\ /
-    \    |   |  `. |_||_|   |
-    | o  |    \_      \     |     -.   .-.
-    |.-.  \     `--..-'   O |     `.`-' .'
-  _.'  .' |     `-.-'      /-.__   ' .-'
-.' `-.` '.|='=.='=.='=.='=|._/_ `-'.'
-`-._  `.  |________/\_____|    `-.'
-   .'   ).| '=' '='\/ '=' |
-   `._.`  '---------------'
-           //___\   //___\
-             ||       ||
-    LGB      ||_.-.   ||_.-.
-            (_.--__) (_.--__)
+#include "SAM.h"
 
-
- */
-
-
-
-#include "../saul/spgbz.h"
 #include <string.h>
 
-spgbz_list_t device_list[127];
+sensor_descriptor_t device_list[127];
 
-void init_spgbz() {
+void init_SAM() {
 	int i;
 	for (i = 0; i<127; i++) {
-		device_list[i] = (spgbz_list_t){0,0,"",0,0};
+		device_list[i] = (sensor_descriptor_t){0,0,"",0,0};
 	}
 }
 
@@ -57,7 +30,7 @@ void add_list_item(sensor_descriptor_t sensor) {
 		if (device_list[i].dev_id == 0) {
 			device_list[i].dev_id = sensor.dev_id;
 			strcpy(device_list[i].name, sensor.name); //TODO:possible error source, check length?
-			device_list[i].sensor_id = sensor.sensor_num;
+			device_list[i].sensor_id = sensor.sensor_id;
 			device_list[i].read = *(sensor.read);
 			device_list[i].write = *(sensor.write);
 			break;

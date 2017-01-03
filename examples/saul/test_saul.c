@@ -1,6 +1,6 @@
 #include "test_saul.h"
 
-extern spgbz_list_t device_list[127];
+extern sensor_descriptor_t device_list[127];
 extern uint32_t i2c_devices[127];
 
 bus_comm_t testFunc () {
@@ -8,18 +8,18 @@ bus_comm_t testFunc () {
 }
 
 void runTests() {
-  printf("\nTesting spgbz init: %s \n", testInit() ? "success" : "fail");
-  printf("Testing spgbz add item: %s \n", testAddItem() ? "success" : "fail");
-  printf("Testing spgbz deleting items: %s \n", testDeleteItem() ? "success" : "fail");
+  printf("\nTesting SAM init: %s \n", testInit() ? "success" : "fail");
+  printf("Testing SAM add item: %s \n", testAddItem() ? "success" : "fail");
+  printf("Testing SAM deleting items: %s \n", testDeleteItem() ? "success" : "fail");
   printf("\nTesting board manager init: %s \n", testBoardManInit() ? "success" : "fail");
   printf("Testing board manager register new dev: %s \n", testBoardManAddItem() ? "success" : "fail");
 }
 
 /*=======================
- *  Testing  spgbz
+ *  Testing  SAM
  =======================*/
 _Bool testInit () {
-	int i;
+int i;
 	for (i = 0; i<127; i++) {
 		if(device_list[i].sensor_id != 0) {
 			return (_Bool)0;

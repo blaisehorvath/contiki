@@ -1,6 +1,6 @@
-#include "spgbz.h"
 #include "bus_manager.h"
 #include <stdio.h>
+#include "SAM.h"
 
 _Bool testAddItem();
 _Bool testInit();

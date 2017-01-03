@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "contiki.h"
 #include "contiki-conf.h"
-#include "spgbz.h"
+#include "SAM.h"
 #include "bus_manager.h"
 #include "tru2air_spi.h"
 #include "tru2air_i2c_com.h"
@@ -113,12 +113,17 @@ void i2c_slave_data_isr () {
 PROCESS_THREAD(saul, ev, data)
 {
   PROCESS_BEGIN();
-
   printf("\n[STATE] -> INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
+
 
   /* Initing the Tru2Air Bus Manager */
   init_i2c_bus_manager();
 
+  /* Init SAM */
+  init_SAM();
+
+  /* RUnning tests */
+  runTests();
 
   /* Inititng I2C SLAVE */
   init_i2c_slave();
@@ -195,10 +200,13 @@ PROCESS_THREAD(saul, ev, data)
 
 				printf("[STATE] -> GET_SENSOR_TYPE");
 				board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
-//				board_i2c_write_read(headerBuff, TRU2AIR_HEADER_BUFF_SIZE, typeBuff, 2);//TRU2AIR_SENSOR_RETURN_TYPE_SIZE);
 				board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_SIZE);
 				board_i2c_read(typeBuff,1);
 				board_i2c_shutdown();
+
+				// Registering to SAM
+
+
 	  			break;
 
 	  	  default:
