@@ -66,7 +66,7 @@ typedef struct sensor_descriptor_item{
 	bus_comm_t (*write)(int32_t,char, double);
 	char name[23];
 	uint32_t dev_id;
-	uint8_t sensor_num;
+	uint8_t sensor_id;
 } sensor_descriptor_t;
 /*!
  * i2c_read function is the function which is called when

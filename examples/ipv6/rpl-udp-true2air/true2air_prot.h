@@ -11,7 +11,7 @@
 #include "net/ip/uip.h"
 
 
-#define SIMULATED 1
+//#define SIMULATED 0
 /**
  * @brief   Our application level communication protocol
  * Flow:

@@ -9,9 +9,10 @@
 #include <stdio.h>
 #include "contiki.h"
 #include "contiki-conf.h"
-#include "spgbz.h"
+#include "SAM.h"
 #include "bus_manager.h"
 #include "tru2air_spi.h"
+#include "tru2air_i2c_com.h"
 
 // temporary includes
 #include "board-i2c.h"
@@ -24,12 +25,41 @@
 #include "test_saul.h"
 #include "dev/leds.h"
 
+/* Tru2Air protocol defines */
+#define TRU2AIR_HEADER_BUFF_SIZE 2
+#define TRU2AIR_SENSOR_RETURN_TYPE_SIZE 1
 
 /* Globals */
 unsigned char master_dev_id_buff[4];
-volatile unsigned int master_dev_id = 0;
 unsigned char rec_bytes = 4;
-volatile unsigned char sensor_node_i2c_id = 0;
+unsigned char buff [5];
+typedef struct tru2air_sensor_t {
+    unsigned int dev_addr;
+    unsigned char i2c_addr;
+    unsigned char sensact_num;
+} tru2air_sensor_t;
+volatile tru2air_sensor_t DEVICE = {0,0,0};
+unsigned char currentSensor = 0; //TODO: reset on the proper place
+
+/**
+ * A stuct that hold an action (see I2C_COMM_PROT_ACTION and e specifier.
+ * The specifier specifies the target of the action.
+ */
+typedef struct tru2air_header_t {
+  unsigned char action;
+  unsigned char specifier;
+} tru2air_header_t;
+tru2air_header_t HEADER;
+
+/* BUFFERS */
+unsigned char headerBuff[2];
+unsigned char nameBuff[23];
+unsigned char typeBuff[2];
+
+/* States */
+enum states {NODE_I2C_SLAVE_INIT, NODE_I2C_MASTER_INIT, REQUIRE_SENSACT_NAME, REQUIRE_SENSOR_RETURN_TYPE, DEBUG };
+volatile enum states STATE = NODE_I2C_SLAVE_INIT;
+enum I2C_COMM_PROT_ACTION comm_type = GET_SENSACT_NUM;
 
 //TEMPORARY VARIABLES
 #define CC1310_IOID_SDA 13
@@ -37,11 +67,10 @@ volatile unsigned char sensor_node_i2c_id = 0;
 #define NO_INTERFACE 0xFF
 static uint8_t slave_addr = 0x10;
 static uint8_t interface = BOARD_I2C_INTERFACE_0;
-
-
-int ansIndex = 0;
-
-static struct etimer et;
+void init_i2c_slave();
+void clearBuffer();
+unsigned int fasz1 = 0xdededede;
+unsigned char fasz2 = 0x00;
 
 /*---------------------------------------------------------------------------*/
 PROCESS(saul, "saul");
@@ -50,13 +79,11 @@ AUTOSTART_PROCESSES(&saul);
 
 
 void i2c_slave_data_isr () {
-
 	// Reading the Slave Status
 	uint32_t ss = I2CSlaveStatus(I2C0_BASE);
 
 	// Clearing the event
 	I2CSlaveIntClear(I2C0_BASE, I2C_SLAVE_INT_DATA | I2C_SLAVE_INT_START | I2C_SLAVE_INT_STOP);
-	// printf("slave status: 0x%08x \n", ss);
 
 	/* Waiting 2 clocks after clearing as suggested in Ti Driverlib CC13xx Ware */
 	int i =0;
@@ -67,13 +94,16 @@ void i2c_slave_data_isr () {
 		master_dev_id_buff[--rec_bytes] = (unsigned char) I2CSlaveDataGet(I2C0_BASE);
 		if (rec_bytes == 0) {
 			rec_bytes = 4;
-			memcpy(&master_dev_id, master_dev_id_buff, 4);
-			sensor_node_i2c_id = register_i2c_device(master_dev_id);
+			memcpy(&(DEVICE.dev_addr), master_dev_id_buff, 4);
+			DEVICE.i2c_addr = register_i2c_device(DEVICE.dev_addr);
 		}
 	}
 	// If a read byte request came from the master
 	else if ( I2C_SLAVE_ACT_TREQ & ss ) {
-		I2CSlaveDataPut(I2C0_BASE, sensor_node_i2c_id);
+		I2CSlaveDataPut(I2C0_BASE, DEVICE.i2c_addr);
+
+		// switching state to DEVICE init
+		STATE = NODE_I2C_MASTER_INIT;
 	}
 
 	//TODO: make an else for error handling
@@ -83,54 +113,147 @@ void i2c_slave_data_isr () {
 PROCESS_THREAD(saul, ev, data)
 {
   PROCESS_BEGIN();
+  printf("\n[STATE] -> INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
+
 
   /* Initing the Tru2Air Bus Manager */
   init_i2c_bus_manager();
 
-//  leds_arch_init(); //for debugging
-//  leds_on(LEDS_GREEN);
-//  leds_on(LEDS_RED);
+  /* Init SAM */
+  init_SAM();
 
-  /* Delay 1 second */
-  etimer_set(&et, CLOCK_SECOND);
+  /* RUnning tests */
+  runTests();
 
-  /* Initing the slave module */
-
-  /* First, make sure the SERIAL PD is on */
-  PRCMPowerDomainOn(PRCM_DOMAIN_SERIAL);
-  while((PRCMPowerDomainStatus(PRCM_DOMAIN_SERIAL)
-        != PRCM_DOMAIN_POWER_ON));
-
-  /* Enable the clock to I2C */
-  PRCMPeripheralRunEnable(PRCM_PERIPH_I2C0);
-  PRCMLoadSet();
-  while(!PRCMLoadGet());
+  /* Inititng I2C SLAVE */
+  init_i2c_slave();
 
 
-  printf("\n1\n");
-  //------------------------------------------------------------------
+//  /* Delay 1 second */
+//  etimer_set(&et, CLOCK_SECOND);
 
-  IOCPinTypeI2c(I2C0_BASE, CC1310_IOID_SDA, CC1310_IOID_SCL);
-
-  //------------------------------------------------------------------
-
-  /* Setting up the interrupt */
-  I2CIntRegister(I2C0_BASE , i2c_slave_data_isr);
-  printf("2\n");
-
-  I2CSlaveIntEnable(I2C0_BASE, I2C_SLAVE_INT_DATA);
-  printf("3\n");
-
-  /* Enable and initialize the I2C master module */
-  I2CSlaveInit(I2C0_BASE, slave_addr);
+  /*=====================================================================
+   * 						Get DevID as Slave
+   * ====================================================================*/
 
 
-  printf("slave init\n");
-
+  int i = 0;
   while(1) {
-	  printf("master dev id: 0x%08x i2c_id: 0x%02x \n", master_dev_id, sensor_node_i2c_id);
+	  switch (STATE) {
+	  	  case ( NODE_I2C_SLAVE_INIT ):
+	  			break;
+
+	  	  case ( NODE_I2C_MASTER_INIT ):
+
+				printf("[STATE] -> NODE_I2C_MASTER_INIT\n");
+
+				if (DEVICE.i2c_addr) {
+
+					//Unregister the slave interrupt and turn off slave mode
+					I2CIntUnregister(I2C0_BASE);
+					printf("[INFO] unregistered the slave interrupts \n");
+
+					disable_i2c_slave();
+					printf("[INFO] disabling i2c slave \n");
+
+					// Wake up as master
+					board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
+					board_i2c_write_single(GET_SENSACT_NUM);
+					clearBuffer();
+					board_i2c_read(buff,5); //TODO: error handling, check if the dev address is valid and maybe if the SENSACT num is >0?
+					DEVICE.sensact_num = buff[4];
+					currentSensor = 0;
+					board_i2c_shutdown();
+
+					printf("[INFO] tru2air sensor node: 0x%08x has 0x%02x sensors\n", DEVICE.dev_addr, DEVICE.sensact_num);
+
+					STATE = REQUIRE_SENSACT_NAME;
+				}
+	  			break;
+
+	  	  case ( REQUIRE_SENSACT_NAME ):
+	  			headerBuff[0] = GET_SENSOR_NAME;
+	  	  	  	headerBuff[1] = currentSensor;
+	  	  	  	if (++currentSensor == DEVICE.sensact_num) {
+	  	  	  		STATE = REQUIRE_SENSOR_RETURN_TYPE;
+	  	  	  		currentSensor = 0;
+	  	  	  	}
+
+
+				printf("[STATE] -> GET_SENSOR_NAME\n");
+
+				board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
+				board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_SIZE);
+				board_i2c_read_until(nameBuff,'\0');
+				board_i2c_shutdown();
+
+				break;
+
+	  	  case ( REQUIRE_SENSOR_RETURN_TYPE ):
+
+	  			headerBuff[0] = GET_SENSOR_TYPE;
+	  	  	  	headerBuff[1] = currentSensor;
+	  	  	  	if (++currentSensor == DEVICE.sensact_num) {
+	  	  	  		currentSensor = 0;
+	  	  	  		STATE = 5;
+	  	  	  	}
+
+				printf("[STATE] -> GET_SENSOR_TYPE");
+				board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
+				board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_SIZE);
+				board_i2c_read(typeBuff,1);
+				board_i2c_shutdown();
+
+				// Registering to SAM
+
+
+	  			break;
+
+	  	  default:
+	  		  if ((++i % 5000000) == 0 ) printf("[STATE] -> DEFAULT\n[INFO] tru2air sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
+	  		  break;
+	  }
   }
 
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+
+void init_i2c_slave() {
+	/* Initing the slave module */
+	printf("[STATE] -> NODE_I2C_SLAVE_INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
+
+	/* First, make sure the SERIAL PD is on */
+	PRCMPowerDomainOn(PRCM_DOMAIN_SERIAL);
+	while((PRCMPowerDomainStatus(PRCM_DOMAIN_SERIAL)
+		!= PRCM_DOMAIN_POWER_ON));
+
+	/* Enable the clock to I2C */
+	PRCMPeripheralRunEnable(PRCM_PERIPH_I2C0);
+	PRCMLoadSet();
+	while(!PRCMLoadGet());
+
+
+	//------------------------------------------------------------------
+
+	IOCPinTypeI2c(I2C0_BASE, CC1310_IOID_SDA, CC1310_IOID_SCL);
+
+	//------------------------------------------------------------------
+
+	/* Setting up the interrupt */
+	I2CIntRegister(I2C0_BASE , i2c_slave_data_isr);
+
+	I2CSlaveIntEnable(I2C0_BASE, I2C_SLAVE_INT_DATA);
+
+	/* Enable and initialize the I2C slave module */
+	I2CSlaveInit(I2C0_BASE, slave_addr);
+}
+
+void clearBuffer() {
+	unsigned char i;
+	for(i=0 ; i<5; i++ ) {
+		buff[i]=0;
+	}
+}
+
+

@@ -30,7 +30,7 @@ void init_i2c_bus_manager () {
 }
 
 uint8_t register_i2c_device(uint32_t dev_addr) {
-	int i; //the 0 i2c address is reserved for the msp430
+	unsigned char i; //the 0 i2c address is reserved for the msp430
 	for (i = 1; i<127; i++) {
 		if(i2c_devices[i]==dev_addr) { // if the device reconnected before the manager had time to remove it
 			return i;
