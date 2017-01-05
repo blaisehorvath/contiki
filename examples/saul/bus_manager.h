@@ -10,8 +10,20 @@
 
 #include <stdint.h>
 #include "board-i2c.h"
-#include "tru2air_spi.h"
 #include "ti-lib.h"
+#include "tru2air_i2c_com.h"
+
+// DEFINES
+#define NO_INTERFACE 0xFF
+#define CC1310_IOID_SDA 13
+#define CC1310_IOID_SCL 14
+//Tru2Air protocol defines
+#define TRU2AIR_HEADER_BUFF_SIZE 2
+#define TRU2AIR_SENSOR_RETURN_TYPE_SIZE 1
+
+
+//TODO: doc
+void init_i2c_slave(uint8_t slave_addr, void (i2c_slave_data_isr)());
 
 /**
  * This function initializes the bus manager.

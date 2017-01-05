@@ -3,8 +3,6 @@
 #include <string.h>
 #include "dev/leds.h"
 
-#define NO_INTERFACE 0xFF
-
 _Bool detectDevice (uint8_t address) {
 	uint8_t slave_addr = address;
 	char messages[] = {'F', 'A', 'S', 'Z'};
@@ -46,4 +44,33 @@ uint8_t register_i2c_device(uint32_t dev_addr) {
 void remove_i2c_device (uint8_t i2c_addr) {
 	i2c_devices[i2c_addr] = 0;
 	//TODO: remove the dev from spgbz too!!!
+}
+
+void init_i2c_slave(uint8_t slave_addr, void (i2c_slave_data_isr)()) {
+	/* Initing the slave module */
+
+	/* First, make sure the SERIAL PD is on */
+	PRCMPowerDomainOn(PRCM_DOMAIN_SERIAL);
+	while((PRCMPowerDomainStatus(PRCM_DOMAIN_SERIAL)
+		!= PRCM_DOMAIN_POWER_ON));
+
+	/* Enable the clock to I2C */
+	PRCMPeripheralRunEnable(PRCM_PERIPH_I2C0);
+	PRCMLoadSet();
+	while(!PRCMLoadGet());
+
+
+	//------------------------------------------------------------------
+
+	IOCPinTypeI2c(I2C0_BASE, CC1310_IOID_SDA, CC1310_IOID_SCL);
+
+	//------------------------------------------------------------------
+
+	/* Setting up the interrupt */
+	I2CIntRegister(I2C0_BASE , i2c_slave_data_isr);
+
+	I2CSlaveIntEnable(I2C0_BASE, I2C_SLAVE_INT_DATA);
+
+	/* Enable and initialize the I2C slave module */
+	I2CSlaveInit(I2C0_BASE, slave_addr);
 }
