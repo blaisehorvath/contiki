@@ -374,67 +374,7 @@ board_i2c_select_slave(uint8_t new_interface, uint8_t address)
 
 // By Blaise
 
-void disable_i2c_slave() {
-	if (accessible()) {
-		I2CSlaveDisable(I2C0_BASE);
-	}
-
-	PRCMPeripheralRunDisable(PRCM_PERIPH_I2C0);
-	PRCMLoadSet();
-	while (!PRCMLoadGet());
-
-	/*
-	 * Set all pins to GPIO Input and disable the output driver. Set internal
-	 * pull to match external pull
-	 *
-	 * SDA and SCL: external PU resistor
-	 * SDA HP and SCL HP: MPU PWR low
-	 */
-	//  ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SDA_HP);
-	//  ti_lib_ioc_io_port_pull_set(CC1310_IOID_SDA_HP, IOC_IOPULL_DOWN);
-	//  ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SCL_HP);
-	//  ti_lib_ioc_io_port_pull_set(CC1310_IOID_SCL_HP, IOC_IOPULL_DOWN);
-	ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SDA);
-	ti_lib_ioc_io_port_pull_set(CC1310_IOID_SDA, IOC_IOPULL_UP);
-	ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SCL);
-	ti_lib_ioc_io_port_pull_set(CC1310_IOID_SCL, IOC_IOPULL_UP);
-}
 
 
-bool board_i2c_read_until(uint8_t *data, char end)
-{
-  uint8_t i;
-  bool success;
-  bool isLastChar = false;
 
-  /* Set slave address */
-  ti_lib_i2c_master_slave_addr_set(I2C0_BASE, slave_addr, true);
-
-  /* Check if another master has access */
-  while(ti_lib_i2c_master_bus_busy(I2C0_BASE));
-
-  /* Assert RUN + START + ACK */
-  ti_lib_i2c_master_control(I2C0_BASE, I2C_MASTER_CMD_BURST_RECEIVE_START);
-
-
-  i = 0;
-  success = true;
-  while(!isLastChar && success) {
-    while(ti_lib_i2c_master_busy(I2C0_BASE));
-    success = i2c_status();
-    if(success) {
-      data[i] = ti_lib_i2c_master_data_get(I2C0_BASE);
-      if(data[i] != end) {
-		ti_lib_i2c_master_control(I2C0_BASE, I2C_MASTER_CMD_BURST_RECEIVE_CONT);
-		i++;
-      }
-      else {
-		ti_lib_i2c_master_control(I2C0_BASE, I2C_MASTER_CMD_BURST_RECEIVE_FINISH);
-		while(ti_lib_i2c_master_bus_busy(I2C0_BASE));
-    	isLastChar = true;
-      }
-    }
-  }
-  return success;
-}
 

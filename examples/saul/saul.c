@@ -14,10 +14,9 @@
 #include "tru2air_i2c_com.h"
 
 // temporary includes
-#include "board-i2c.h"
 #include "ti-lib.h"
 #include <stdbool.h>
-#include "i2c.h"
+//#include "i2c.h"
 /*---------------------------------------------------------------------------*/
 
 /*-----------------------------------TESTS-----------------------------------*/
@@ -95,6 +94,9 @@ void i2c_slave_data_isr () {
 
 
 PROCESS_THREAD(i2c_slave_listening, ev, data) {
+
+	printf("\n[INIT MAIN PROCESS]\n");
+
 	PROCESS_BEGIN();
 
 
@@ -117,7 +119,7 @@ PROCESS_THREAD(i2c_slave_listening, ev, data) {
 		  printf("[STATE] -> NODE_I2C_SLAVE_INIT \n[INFO] Initing bus manager \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
 
 			/* allocate the required event */
-			tru2air_client_i2c_master_request = process_alloc_event();
+			//tru2air_client_i2c_master_request = process_alloc_event();
 
 			slave_initiated = 1;
 		}
@@ -127,14 +129,14 @@ PROCESS_THREAD(i2c_slave_listening, ev, data) {
 		  printf("[STATE] -> NODE_I2C_SLAVE_INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
 
 			/* allocate the required event */
-			tru2air_client_i2c_master_request = process_alloc_event();
+			//tru2air_client_i2c_master_request = process_alloc_event();
 
 			slave_initiated = 1;
 		}
 		else if (STATE == NODE_I2C_MASTER_INIT) {
 
 			process_start(&i2c_request_handler, NULL);
-			printf("\n[STATE] -> INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n>DEBUG< state is: %d", DEVICE.i2c_addr, DEVICE.dev_addr, STATE);
+			printf("\n[STATE] -> INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
 		}
 
 	}
@@ -149,8 +151,6 @@ PROCESS_THREAD(i2c_request_handler, ev, data)
   PROCESS_BEGIN();
 
   char initiated = 0;
-
-  printf(">DEBUG< initiated: %d\n", initiated);
 
   int i = 0;
 
@@ -228,7 +228,7 @@ PROCESS_THREAD(i2c_request_handler, ev, data)
 	  		  if ((++i % 5000000) == 0 ) printf("[STATE] -> DEFAULT\n[INFO] tru2air sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
 	  		  STATE = I2C_SLAVE_LISTEN;
 	  		  initiated = 1;
-	  		  process_poll(&i2c_slave_listening);
+	  		  process_start(&i2c_slave_listening, NULL);
 	  		  break;
 	  }
   }
