@@ -89,8 +89,6 @@ void i2c_slave_data_isr () {
 PROCESS_THREAD(saul, ev, data)
 {
   PROCESS_BEGIN();
-  printf("\n[STATE] -> INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
-
 
   /* Initing the Tru2Air Bus Manager */
   init_i2c_bus_manager();
@@ -101,23 +99,22 @@ PROCESS_THREAD(saul, ev, data)
   /* RUnning tests */
   runTests();
 
-  /* Inititng I2C SLAVE as 0x10 */
-  init_i2c_slave(0x10, i2c_slave_data_isr);
-  printf("[STATE] -> NODE_I2C_SLAVE_INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
-
-
-//  /* Delay 1 second */
-//  etimer_set(&et, CLOCK_SECOND);
-
-  /*=====================================================================
-   * 						Get DevID as Slave
-   * ====================================================================*/
-
-
+  int slave_init = 0;
   int i = 0;
   while(1) {
 	  switch (STATE) {
 	  	  case ( NODE_I2C_SLAVE_INIT ):
+	  			if (slave_init == 0) {
+
+	  					printf("\n[STATE] -> INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
+
+
+
+	  					/* Inititng I2C SLAVE as 0x10 */
+	  					init_i2c_slave(0x10, i2c_slave_data_isr);
+	  					printf("[STATE] -> NODE_I2C_SLAVE_INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
+	  					slave_init = 1;
+	  			}
 	  			break;
 
 	  	  case ( NODE_I2C_MASTER_INIT ):
@@ -131,6 +128,7 @@ PROCESS_THREAD(saul, ev, data)
 					printf("[INFO] unregistered the slave interrupts \n");
 
 					disable_i2c_slave();
+					slave_init = 0;
 					printf("[INFO] disabling i2c slave \n");
 
 					// Wake up as master
@@ -187,7 +185,8 @@ PROCESS_THREAD(saul, ev, data)
 	  			break;
 
 	  	  default:
-	  		  if ((++i % 5000000) == 0 ) printf("[STATE] -> DEFAULT\n[INFO] tru2air sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
+	  		  printf("[STATE] -> DEFAULT\n[INFO] tru2air sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
+	  		  STATE = NODE_I2C_SLAVE_INIT;
 	  		  break;
 	  }
   }
