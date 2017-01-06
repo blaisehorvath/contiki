@@ -37,8 +37,8 @@
  */
 /*---------------------------------------------------------------------------*/
 
-#define CC1310_IOID_SDA 13
-#define CC1310_IOID_SCL 14
+#define CC1310_IOID_SDA 9
+#define CC1310_IOID_SCL 8
 #include "contiki-conf.h"
 #include "ti-lib.h"
 #include "board-i2c.h"

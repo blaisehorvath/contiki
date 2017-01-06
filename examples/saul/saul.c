@@ -40,17 +40,24 @@ unsigned char nameBuff[23];
 unsigned char typeBuff[2];
 
 /* States */
-enum states {NODE_I2C_SLAVE_INIT, NODE_I2C_MASTER_INIT, REQUIRE_SENSACT_NAME, REQUIRE_SENSOR_RETURN_TYPE, DEBUG };
-volatile enum states STATE = NODE_I2C_SLAVE_INIT;
+enum states {I2C_SLAVE_LISTEN, NODE_I2C_MASTER_INIT, REQUIRE_SENSACT_NAME, REQUIRE_SENSOR_RETURN_TYPE, DEBUG };
+volatile enum states STATE = I2C_SLAVE_LISTEN;
 enum I2C_COMM_PROT_ACTION comm_type = GET_SENSACT_NUM;
 
+/* Process switching */
+static process_event_t tru2air_client_i2c_master_request;
+
+
 //TEMPORARY VARIABLES
+char slave_initiated = 0;
+char bus_manager_inited = 0;
 #define NO_INTERFACE 0xFF
 void clearBuffer();
 
 /*---------------------------------------------------------------------------*/
-PROCESS(saul, "saul");
-AUTOSTART_PROCESSES(&saul);
+PROCESS(i2c_slave_listening, "main");
+PROCESS(i2c_request_handler, "i2c_request_handler");
+AUTOSTART_PROCESSES(&i2c_slave_listening, &i2c_request_handler);
 /*---------------------------------------------------------------------------*/
 
 
@@ -86,39 +93,69 @@ void i2c_slave_data_isr () {
 
 }
 
-PROCESS_THREAD(saul, ev, data)
+
+PROCESS_THREAD(i2c_slave_listening, ev, data) {
+	PROCESS_BEGIN();
+
+
+	while(STATE == I2C_SLAVE_LISTEN) {
+
+
+		if (slave_initiated == 0 && bus_manager_inited == 0) {
+		  /* Initing the Tru2Air Bus Manager */
+		  init_i2c_bus_manager();
+		  bus_manager_inited = 1;
+
+		  /* Init SAM */
+//		  init_SAM();
+
+		  /* RUnning tests */
+//		  runTests();
+
+		  /* Inititng I2C SLAVE as 0x10 */
+		  init_i2c_slave(0x10, i2c_slave_data_isr);
+		  printf("[STATE] -> NODE_I2C_SLAVE_INIT \n[INFO] Initing bus manager \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
+
+			/* allocate the required event */
+			tru2air_client_i2c_master_request = process_alloc_event();
+
+			slave_initiated = 1;
+		}
+		else if (slave_initiated == 0 && bus_manager_inited == 1) {
+		  /* Inititng I2C SLAVE as 0x10 */
+		  init_i2c_slave(0x10, i2c_slave_data_isr);
+		  printf("[STATE] -> NODE_I2C_SLAVE_INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
+
+			/* allocate the required event */
+			tru2air_client_i2c_master_request = process_alloc_event();
+
+			slave_initiated = 1;
+		}
+		else if (STATE == NODE_I2C_MASTER_INIT) {
+
+			process_start(&i2c_request_handler, NULL);
+			printf("\n[STATE] -> INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n>DEBUG< state is: %d", DEVICE.i2c_addr, DEVICE.dev_addr, STATE);
+		}
+
+	}
+
+	PROCESS_END();
+}
+
+
+
+PROCESS_THREAD(i2c_request_handler, ev, data)
 {
   PROCESS_BEGIN();
-  printf("\n[STATE] -> INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
 
+  char initiated = 0;
 
-  /* Initing the Tru2Air Bus Manager */
-  init_i2c_bus_manager();
-
-  /* Init SAM */
-  init_SAM();
-
-  /* RUnning tests */
-  runTests();
-
-  /* Inititng I2C SLAVE as 0x10 */
-  init_i2c_slave(0x10, i2c_slave_data_isr);
-  printf("[STATE] -> NODE_I2C_SLAVE_INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
-
-
-//  /* Delay 1 second */
-//  etimer_set(&et, CLOCK_SECOND);
-
-  /*=====================================================================
-   * 						Get DevID as Slave
-   * ====================================================================*/
-
+  printf(">DEBUG< initiated: %d\n", initiated);
 
   int i = 0;
-  while(1) {
+
+  while(!initiated) {
 	  switch (STATE) {
-	  	  case ( NODE_I2C_SLAVE_INIT ):
-	  			break;
 
 	  	  case ( NODE_I2C_MASTER_INIT ):
 
@@ -131,6 +168,7 @@ PROCESS_THREAD(saul, ev, data)
 					printf("[INFO] unregistered the slave interrupts \n");
 
 					disable_i2c_slave();
+					slave_initiated = 0;
 					printf("[INFO] disabling i2c slave \n");
 
 					// Wake up as master
@@ -175,7 +213,7 @@ PROCESS_THREAD(saul, ev, data)
 	  	  	  		STATE = 5;
 	  	  	  	}
 
-				printf("[STATE] -> GET_SENSOR_TYPE");
+				printf("[STATE] -> GET_SENSOR_TYPE\n");
 				board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
 				board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_SIZE);
 				board_i2c_read(typeBuff,1);
@@ -188,6 +226,9 @@ PROCESS_THREAD(saul, ev, data)
 
 	  	  default:
 	  		  if ((++i % 5000000) == 0 ) printf("[STATE] -> DEFAULT\n[INFO] tru2air sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
+	  		  STATE = I2C_SLAVE_LISTEN;
+	  		  initiated = 1;
+	  		  process_poll(&i2c_slave_listening);
 	  		  break;
 	  }
   }
