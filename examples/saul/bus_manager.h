@@ -16,8 +16,8 @@
 
 // DEFINES
 #define NO_INTERFACE 0xFF
-#define CC1310_IOID_SDA 9
-#define CC1310_IOID_SCL 8
+#define CC1310_IOID_SDA	13
+#define CC1310_IOID_SCL 14
 //Tru2Air protocol defines
 #define TRU2AIR_HEADER_BUFF_SIZE 2
 #define TRU2AIR_SENSOR_RETURN_TYPE_SIZE 1
