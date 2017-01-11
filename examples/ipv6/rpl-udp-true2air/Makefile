@@ -1,7 +1,7 @@
 all: udp-client udp-server
 CONTIKI=../../..
-PROJECT_SOURCEFILES += true2air_prot.c board-i2c.c
-CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\"
+PROJECT_SOURCEFILES += true2air_prot.c bus_manager.c
+CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\" -Wno-discarded-qualifiers -Wno-pointer-sign
 
 ifdef WITH_COMPOWER
 APPS+=powertrace
