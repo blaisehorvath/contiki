@@ -33,6 +33,7 @@ void disable_i2c_slave();
 void init_i2c_slave(uint8_t slave_addr, void (i2c_slave_data_isr)());
 static bool accessible(void);
 static bool i2c_status();
+void i2c_slave_data_isr();
 
 /**
  * This function initializes the bus manager.
@@ -58,17 +59,6 @@ uint8_t register_i2c_device();
  * that removes every sensor related to this device from the spgbz.
  */
 void remove_i2c_device (uint8_t i2c_addr);
-
-/*! bus_comm_t describes a data type which is returned both from the
- * i2c bus and to the spgbz as a data value from a sensor
- * err is the flag which is true if some kind of error occured during the transmission
- * data is the data returned
- */
-typedef struct bus_comm{
-	uint8_t err;
-	double data;
-} bus_comm_t;
-
 
 /*!
  * This array holds the device ids of the connected i2c devices.

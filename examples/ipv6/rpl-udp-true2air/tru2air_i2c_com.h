@@ -31,4 +31,15 @@ typedef struct tru2air_sensor_node_t {
     unsigned char sensact_num;
 } tru2air_sensor_node_t;
 
+/*! bus_comm_t describes a data type which is returned both from the
+ * i2c bus and to the spgbz as a data value from a sensor
+ * err is the flag which is true if some kind of error occured during the transmission
+ * data is the data returned
+ */
+typedef struct bus_comm_t {
+	uint8_t err;
+	double data;
+} bus_comm_t;
+
+
 #endif /* EXAMPLES_SAUL_TRU2AIR_I2C_COM_H_ */

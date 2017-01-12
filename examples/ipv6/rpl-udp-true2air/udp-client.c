@@ -73,7 +73,8 @@ static struct uip_udp_conn *client_conn;
 static uip_ipaddr_t server_ipaddr;
 
 //#############################################################################################
-#include "bus_manager.h"
+#include "SAM.h"
+
 /* Globals */
 enum states {I2C_SLAVE_LISTEN, NODE_I2C_MASTER_INIT, REQUIRE_SENSACT_NAME, REQUIRE_SENSOR_RETURN_TYPE };
 volatile enum states STATE = I2C_SLAVE_LISTEN;
@@ -82,37 +83,37 @@ unsigned char rec_bytes = 4;
 unsigned char buff [5];
 volatile  tru2air_sensor_node_t DEVICE = {0,0,0};
 unsigned char currentSensor = 0; //TODO: reset on the proper place
-void i2c_slave_data_isr () {
-	// Reading the Slave Status
-	uint32_t ss = I2CSlaveStatus(I2C0_BASE);
-
-	// Clearing the event
-	I2CSlaveIntClear(I2C0_BASE, I2C_SLAVE_INT_DATA | I2C_SLAVE_INT_START | I2C_SLAVE_INT_STOP);
-
-	/* Waiting 2 clocks after clearing as suggested in Ti Driverlib CC13xx Ware */
-	int i =0;
-	i++;
-
-	// If the first byte (FBR) or any master written byte arrived from the master
-	if( (I2C_SLAVE_ACT_RREQ_FBR | I2C_SLAVE_ACT_RREQ) & ss) {
-		master_dev_id_buff[--rec_bytes] = (unsigned char) I2CSlaveDataGet(I2C0_BASE);
-		if (rec_bytes == 0) {
-			rec_bytes = 4;
-			memcpy(&(DEVICE.dev_addr), master_dev_id_buff, 4);
-			DEVICE.i2c_addr = register_i2c_device(DEVICE.dev_addr);
-		}
-	}
-	// If a read byte request came from the master
-	else if ( I2C_SLAVE_ACT_TREQ & ss ) {
-		I2CSlaveDataPut(I2C0_BASE, DEVICE.i2c_addr);
-
-		// switching state to DEVICE init
-		STATE = NODE_I2C_MASTER_INIT;
-	}
-
-	//TODO: make an else for error handling
-
-}
+//void i2c_slave_data_isr () {
+//	// Reading the Slave Status
+//	uint32_t ss = I2CSlaveStatus(I2C0_BASE);
+//
+//	// Clearing the event
+//	I2CSlaveIntClear(I2C0_BASE, I2C_SLAVE_INT_DATA | I2C_SLAVE_INT_START | I2C_SLAVE_INT_STOP);
+//
+//	/* Waiting 2 clocks after clearing as suggested in Ti Driverlib CC13xx Ware */
+//	int i =0;
+//	i++;
+//
+//	// If the first byte (FBR) or any master written byte arrived from the master
+//	if( (I2C_SLAVE_ACT_RREQ_FBR | I2C_SLAVE_ACT_RREQ) & ss) {
+//		master_dev_id_buff[--rec_bytes] = (unsigned char) I2CSlaveDataGet(I2C0_BASE);
+//		if (rec_bytes == 0) {
+//			rec_bytes = 4;
+//			memcpy(&(DEVICE.dev_addr), master_dev_id_buff, 4);
+//			DEVICE.i2c_addr = register_i2c_device(DEVICE.dev_addr);
+//		}
+//	}
+//	// If a read byte request came from the master
+//	else if ( I2C_SLAVE_ACT_TREQ & ss ) {
+//		I2CSlaveDataPut(I2C0_BASE, DEVICE.i2c_addr);
+//
+//		// switching state to DEVICE init
+//		STATE = NODE_I2C_MASTER_INIT;
+//	}
+//
+//	//TODO: make an else for error handling
+//
+//}
 
 /*---------------------------------------------------------------------------*/
 PROCESS(udp_client_process, "UDP client process");
@@ -215,7 +216,7 @@ PROCESS_THREAD(udp_client_process, ev, data)
 
   PROCESS_BEGIN();
 
-  PROCESS_PAUSE();
+//  PROCESS_PAUSE();
 
   set_global_address();
 
@@ -246,12 +247,10 @@ PROCESS_THREAD(udp_client_process, ev, data)
   leds_arch_init();
 
 
-  static unsigned int slave_addr = 0x10;
-  init_i2c_slave(slave_addr, i2c_slave_data_isr);
-  printf("started i2c slave on 0x%02x \n",slave_addr);
+
 
   while(1) {
-    PROCESS_YIELD();
+//    PROCESS_YIELD();
     if(ev == tcpip_event) {
       tcpip_handler();
     }

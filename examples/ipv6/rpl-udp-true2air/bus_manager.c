@@ -13,6 +13,13 @@ void init_i2c_bus_manager () {
 	}
 }
 
+void i2c_slave_data_isr () {
+	// Clearing the event
+	I2CSlaveIntClear(I2C0_BASE, I2C_SLAVE_INT_DATA | I2C_SLAVE_INT_START | I2C_SLAVE_INT_STOP);
+
+	(void)I2CSlaveDataGet(I2C0_BASE);
+}
+
 uint8_t register_i2c_device(uint32_t dev_addr) {
 	unsigned char i; //the 0 i2c address is reserved for the msp430
 	for (i = 1; i<127; i++) {
