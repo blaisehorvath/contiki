@@ -37,7 +37,7 @@ typedef struct tru2air_sensor_node_t {
  * data is the data returned
  */
 typedef struct sensact_rw_result_t {
-	uint8_t err;
+	unsigned char err;
 	double data;
 } sensact_rw_result_t;
 

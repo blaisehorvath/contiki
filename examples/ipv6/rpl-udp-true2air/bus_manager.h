@@ -12,7 +12,7 @@
 #include <stdbool.h>
 //#include "board-i2c.h"
 #include "ti-lib.h"
-#include "tru2air_i2c_com.h"
+#include "tru2air_comm.h"
 
 // DEFINES
 #define NO_INTERFACE 0xFF

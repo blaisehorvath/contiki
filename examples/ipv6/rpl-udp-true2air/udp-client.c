@@ -74,9 +74,11 @@ static uip_ipaddr_t server_ipaddr;
 
 //#############################################################################################
 #include "SAM.h"
-#include "tru2air_i2c_com.h"
+#include "tru2air_comm.h"
+#include "cc1310_onboard_devices.h"
 
 /* Globals */
+extern sensor_descriptor_t green_led, red_led;
 enum states {I2C_SLAVE_LISTEN, NODE_I2C_MASTER_INIT, REQUIRE_SENSACT_NAME, REQUIRE_SENSOR_RETURN_TYPE };
 volatile enum states STATE = I2C_SLAVE_LISTEN;
 unsigned char master_dev_id_buff[4];
@@ -210,41 +212,7 @@ set_global_address(void)
   uip_ip6addr(&server_ipaddr, UIP_DS6_DEFAULT_PREFIX, 0, 0, 0, 0x0250, 0xc2ff, 0xfea8, 0xcd1a); //redbee-econotag
 #endif
 }
-/*---------------------------------------------------------------------------*/
-/* TODO: separate this to different headers and source files */
-#define ONBOARD_DEV_ADDR 1
-void set_red_led (double toWrite, sensact_rw_result_t* result) {
-	if (toWrite == 1) {
-		leds_on(LEDS_RED);
-		result->data = 1;
-		result->err = NO_SENSACT_ERROR;
-	}
-	else if (toWrite == 0) {
-		leds_off(LEDS_RED);
-		result->data = 0;
-		result->err = NO_SENSACT_ERROR;
-	}
-	else {
-		result->data = 0;
-		result->err = WRITE_VALIE_OUT_OF_RANGE;
-	}
-}
 
-void read_red_led (sensact_rw_result_t* result) {
-	/*
-	 * The leds get returns the result of the ti_lib's led arch get, which returns
-	 * 0 if the value is 0 or if something went wrong, so there is no way to
-	 * differentiate between when some error happened or the led is off...
-	 * */
-	if ( leds_get() && LEDS_RED ) {
-		result->data = 1;
-		result->err = NO_SENSACT_ERROR;
-	}
-	else {
-		result->data = 0;
-		result->err = NO_SENSACT_ERROR;
-	}
-}
 /*---------------------------------------------------------------------------*/
 PROCESS_THREAD(udp_client_process, ev, data)
 {
@@ -257,25 +225,12 @@ PROCESS_THREAD(udp_client_process, ev, data)
   /* SAM stuff --------------------------------------------------------------*/
   init_SAM();
 
-  static sensor_descriptor_t red_led = {
-		  read_red_led,
-		  set_red_led,
-		  "red led",
-		  ONBOARD_DEV_ADDR,
-		  0x01
-  };
-
   add_sensact(red_led);
+  add_sensact(green_led);
 
   sensact_rw_result_t led_result;
-  read_sensact(ONBOARD_DEV_ADDR, 0x01, &led_result);
-  printf("\n led state %d \n", led_result.data);
   write_sensact(ONBOARD_DEV_ADDR, 0x01, 1, &led_result);
-  _Bool isON = led_result.data == 0 ? 0 : 1;
-  printf("led result is: %d, led error is: %d \n", isON, led_result.err);
-  write_sensact(ONBOARD_DEV_ADDR, 0x01, 0, &led_result);
-  isON = led_result.data == 0 ? 0 : 1;
-  printf("led result is: %d, led error is: %d \n", isON, led_result.err);
+  write_sensact(ONBOARD_DEV_ADDR, 0x02, 1, &led_result);
 
   printf("board sensact num is %d \n", get_sensact_num());
   /* SAM stuff end -----------------------------------------------------------*/
