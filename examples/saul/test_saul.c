@@ -3,8 +3,8 @@
 extern sensor_descriptor_t device_list[127];
 extern uint32_t i2c_devices[127];
 
-bus_comm_t testFunc () {
-	return (bus_comm_t){0,8.5};
+sensact_rw_result_t testFunc () {
+	return (sensact_rw_result_t){0,8.5};
 }
 
 void runTests() {

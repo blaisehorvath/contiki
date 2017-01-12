@@ -36,10 +36,15 @@ typedef struct tru2air_sensor_node_t {
  * err is the flag which is true if some kind of error occured during the transmission
  * data is the data returned
  */
-typedef struct bus_comm_t {
+typedef struct sensact_rw_result_t {
 	uint8_t err;
 	double data;
-} bus_comm_t;
+} sensact_rw_result_t;
 
+enum SENSACT_COMM_ERR_T {
+	NO_SENSACT_ERROR, /* There was no error */
+	WRITE_VALIE_OUT_OF_RANGE, /* The write operation exceeded the sensors input range */
+	SENSACT_MISSING /* The adressed sensact is not there (or no longer there) */
+};
 
 #endif /* EXAMPLES_SAUL_TRU2AIR_I2C_COM_H_ */

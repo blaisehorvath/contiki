@@ -20,6 +20,7 @@ void del_list_items(uint32_t dev_id);
  */
 void add_list_item(sensor_descriptor_t sensor);
 
-
+void read_sensact(uint32_t device_addr, char sensact_addr, sensact_rw_result_t* result);
+void write_sensact(uint32_t device_addr, char sensact_addr, double data, sensact_rw_result_t* result);
 
 #endif /* EXAMPLES_IPV6_RPL_UDP_TRUE2AIR_SPGBZ_H_ */

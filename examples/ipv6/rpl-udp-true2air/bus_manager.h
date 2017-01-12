@@ -73,8 +73,8 @@ uint32_t i2c_devices [127];
  * sensor_descriptor_t is a structure which holds all the parameters needed to initialize a sensor
  */
 typedef struct sensor_descriptor_item{
-	bus_comm_t (*read) (int32_t,char );
-	bus_comm_t (*write)(int32_t,char, double);
+	void (*read) (sensact_rw_result_t* result);
+	void (*write)(double toWrite, sensact_rw_result_t* result);
 	char name[23];
 	uint32_t dev_id;
 	uint8_t sensor_id;
@@ -87,7 +87,7 @@ typedef struct sensor_descriptor_item{
  * 		|----------W,addr|uint32_t dev_id|uin8_t sensor_id----->|
  * 		|<---------------R,addr|bus_comm_t data|--------------->| Master request, slave answer
  */
-bus_comm_t i2c_read(uint32_t dev_id, uint8_t sensor_id);
+sensact_rw_result_t i2c_read(uint32_t dev_id, uint8_t sensor_id);
 /*!
  * i2c_write function is the function which is called when
  * one tries to access a sensor which is attached to the i2c bus
@@ -96,7 +96,7 @@ bus_comm_t i2c_read(uint32_t dev_id, uint8_t sensor_id);
  * 		|--W,addr|uint32_t dev_id|uin8_t sensor_id,double data->|
  * 		|<---------------R,addr|bus_comm_t data|--------------->| Master request, slave answer
  */
-bus_comm_t i2c_write(uint32_t dev_id, uint8_t sensor_id,double data);
+sensact_rw_result_t i2c_write(uint32_t dev_id, uint8_t sensor_id,double data);
 
 /**
  * \brief Select an I2C slave

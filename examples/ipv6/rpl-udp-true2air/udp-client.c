@@ -74,6 +74,7 @@ static uip_ipaddr_t server_ipaddr;
 
 //#############################################################################################
 #include "SAM.h"
+#include "tru2air_i2c_com.h"
 
 /* Globals */
 enum states {I2C_SLAVE_LISTEN, NODE_I2C_MASTER_INIT, REQUIRE_SENSACT_NAME, REQUIRE_SENSOR_RETURN_TYPE };
@@ -210,13 +211,72 @@ set_global_address(void)
 #endif
 }
 /*---------------------------------------------------------------------------*/
+/* TODO: separate this to different headers and source files */
+#define ONBOARD_DEV_ADDR 1
+void set_red_led (double toWrite, sensact_rw_result_t* result) {
+	if (toWrite == 1) {
+		leds_on(LEDS_RED);
+		result->data = 1;
+		result->err = NO_SENSACT_ERROR;
+	}
+	else if (toWrite == 0) {
+		leds_off(LEDS_RED);
+		result->data = 0;
+		result->err = NO_SENSACT_ERROR;
+	}
+	else {
+		result->data = 0;
+		result->err = WRITE_VALIE_OUT_OF_RANGE;
+	}
+}
+
+void read_red_led (sensact_rw_result_t* result) {
+	/*
+	 * The leds get returns the result of the ti_lib's led arch get, which returns
+	 * 0 if the value is 0 or if something went wrong, so there is no way to
+	 * differentiate between when some error happened or the led is off...
+	 * */
+	if ( leds_get() && LEDS_RED ) {
+		result->data = 1;
+		result->err = NO_SENSACT_ERROR;
+	}
+	else {
+		result->data = 0;
+		result->err = NO_SENSACT_ERROR;
+	}
+}
+/*---------------------------------------------------------------------------*/
 PROCESS_THREAD(udp_client_process, ev, data)
 {
   static struct etimer periodic;
 
   PROCESS_BEGIN();
 
-//  PROCESS_PAUSE();
+  PROCESS_PAUSE();
+
+  /* SAM stuff --------------------------------------------------------------*/
+  init_SAM();
+
+  static sensor_descriptor_t red_led = {
+		  read_red_led,
+		  set_red_led,
+		  "red led",
+		  ONBOARD_DEV_ADDR,
+		  0x01
+  };
+
+  add_list_item(red_led);
+
+  sensact_rw_result_t led_result;
+  read_sensact(ONBOARD_DEV_ADDR, 0x01, &led_result);
+  printf("\n led state %d \n", led_result.data);
+  write_sensact(ONBOARD_DEV_ADDR, 0x01, 1, &led_result);
+  _Bool isON = led_result.data == 0 ? 0 : 1;
+  printf("led result is: %d, led error is: %d \n", isON, led_result.err);
+
+
+  /* SAM stuff end -----------------------------------------------------------*/
+
 
   set_global_address();
 
@@ -250,7 +310,7 @@ PROCESS_THREAD(udp_client_process, ev, data)
 
 
   while(1) {
-//    PROCESS_YIELD();
+    PROCESS_YIELD();
     if(ev == tcpip_event) {
       tcpip_handler();
     }
