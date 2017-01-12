@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "net/ip/uip.h"
+#include "SAM.h"
 
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
@@ -19,6 +20,9 @@
 
 #define NO_INTERFACE 0xFF
 
+/* Includes and globals by Blaise*/
+/* for SAM:*/
+extern sensor_descriptor_t device_list[];
 
 uint8_t node_initialized = 0;
 uint8_t slave_addr = 0x02;
@@ -42,39 +46,37 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			pkt_out->data = 0;
 			pkt_out->new_device = 0;
 			sprintf(pkt_out->name,"REPLY FROM NODE!");
-			pkt_out->cnt =
-#ifdef WITH_BME280
-					5;
-#else
-					2;
-#endif
+			pkt_out->cnt = get_sensact_num();
 			return 1;
 		case SENSACT_LIST_ITEM:
 			pkt_out->msg = SENSACT_LIST_ITEM;
 			pkt_out->data = 0;
 			pkt_out->new_device = 0;
 			pkt_out->cnt = pkt_in->cnt;
-			switch(pkt_in->cnt){
-				case 0:
-					sprintf(pkt_out->name,"LED(RED)");
-					return 1;
-				case 1:
-					sprintf(pkt_out->name,"LED(GREEN)");
-					return 1;
-#ifdef WITH_BME280
-				case 2:
-					sprintf(pkt_out->name,"TEMP");
-					return 1;
-				case 3:
-					sprintf(pkt_out->name,"PRESS");
-					return 1;
-				case 4:
-					sprintf(pkt_out->name,"HUMIDITY");
-					return 1;
-#endif
-				default:
-					pkt_out->msg = ERROR_PKT_MSG;
-			}
+			//TODO: possible security flaw, pkt_in->cnt could contai a number that is out of range of the devices list
+			if (device_list[pkt_in->cnt].dev_id != 0) sprintf(pkt_out->name, device_list[pkt_in->cnt].name);
+			else { pkt_out->msg = ERROR_PKT_MSG; }
+//			switch(pkt_in->cnt){
+//				case 0:
+//					sprintf(pkt_out->name,"LED(RED)");
+//					return 1;
+//				case 1:
+//					sprintf(pkt_out->name,"LED(GREEN)");
+//					return 1;
+//#ifdef WITH_BME280
+//				case 2:
+//					sprintf(pkt_out->name,"TEMP");
+//					return 1;
+//				case 3:
+//					sprintf(pkt_out->name,"PRESS");
+//					return 1;
+//				case 4:
+//					sprintf(pkt_out->name,"HUMIDITY");
+//					return 1;
+//#endif
+//				default:
+//					pkt_out->msg = ERROR_PKT_MSG;
+//			}
 			return 1;
 		case GET_SENSACT: // Dummy sensor handler
 			pkt_out->msg = GET_SENSACT_ACK;
