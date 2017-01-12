@@ -11,14 +11,14 @@ void init_SAM();
  * The del_list_item function deletes all sensors with the given dev_id value from the spgbz_list
  * \param dev_id The dev_id of the sensor which should be deleted, often because it disconnected from the bus
  */
-void del_list_items(uint32_t dev_id);
+void del_device(uint32_t dev_id);
 
 /*!
  * The add_list_item function adds a sensor item to the spgbz_list, often because a sensor
  * has been connected to the bus
  * \param sensor The parameters of the sensor
  */
-void add_list_item(sensor_descriptor_t sensor);
+void add_sensact(sensor_descriptor_t sensor);
 
 
 

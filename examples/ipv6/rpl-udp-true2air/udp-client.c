@@ -265,7 +265,7 @@ PROCESS_THREAD(udp_client_process, ev, data)
 		  0x01
   };
 
-  add_list_item(red_led);
+  add_sensact(red_led);
 
   sensact_rw_result_t led_result;
   read_sensact(ONBOARD_DEV_ADDR, 0x01, &led_result);
@@ -273,8 +273,11 @@ PROCESS_THREAD(udp_client_process, ev, data)
   write_sensact(ONBOARD_DEV_ADDR, 0x01, 1, &led_result);
   _Bool isON = led_result.data == 0 ? 0 : 1;
   printf("led result is: %d, led error is: %d \n", isON, led_result.err);
+  write_sensact(ONBOARD_DEV_ADDR, 0x01, 0, &led_result);
+  isON = led_result.data == 0 ? 0 : 1;
+  printf("led result is: %d, led error is: %d \n", isON, led_result.err);
 
-
+  printf("board sensact num is %d \n", get_sensact_num());
   /* SAM stuff end -----------------------------------------------------------*/
 
 

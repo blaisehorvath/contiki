@@ -31,8 +31,8 @@ int i;
 _Bool testAddItem () {
 	sensor_descriptor_t sensor = (sensor_descriptor_t){testFunc, testFunc, "test",42,3};
 	sensor_descriptor_t sensor2 = (sensor_descriptor_t){testFunc, testFunc, "test",42,3};
-	add_list_item(sensor);
-	add_list_item(sensor2);
+	add_sensact(sensor);
+	add_sensact(sensor2);
 	if (device_list[0].dev_id==42 && device_list[1].dev_id==42) {
 		return (_Bool)1;
 	} else {
@@ -41,7 +41,7 @@ _Bool testAddItem () {
 }
 
 _Bool testDeleteItem () {
-	del_list_items(42);
+	del_device(42);
 	if (device_list[0].dev_id==0 && device_list[1].dev_id==0) {
 		return (_Bool)1;
 	}

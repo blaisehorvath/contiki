@@ -11,7 +11,7 @@ void init_SAM() {
 	}
 }
 
-void del_list_items(uint32_t dev_id) {
+void del_device(uint32_t dev_id) {
 	int i;
 	for (i = 0; i < 127; i++) {
 		if (device_list[i].dev_id != 0 && device_list[i].dev_id == dev_id) {
@@ -24,7 +24,7 @@ void del_list_items(uint32_t dev_id) {
 	}
 }
 
-void add_list_item(sensor_descriptor_t sensor) {
+void add_sensact(sensor_descriptor_t sensor) {
 	int i;
 	for (i = 0; i < 127; i++) {
 		if (device_list[i].dev_id == 0) {
