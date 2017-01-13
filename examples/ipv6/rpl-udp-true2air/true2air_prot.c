@@ -56,27 +56,6 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			//TODO: possible security flaw, pkt_in->cnt could contai a number that is out of range of the devices list
 			if (device_list[pkt_in->cnt].dev_id != 0) sprintf(pkt_out->name, device_list[pkt_in->cnt].name);
 			else { pkt_out->msg = ERROR_PKT_MSG; }
-//			switch(pkt_in->cnt){
-//				case 0:
-//					sprintf(pkt_out->name,"LED(RED)");
-//					return 1;
-//				case 1:
-//					sprintf(pkt_out->name,"LED(GREEN)");
-//					return 1;
-//#ifdef WITH_BME280
-//				case 2:
-//					sprintf(pkt_out->name,"TEMP");
-//					return 1;
-//				case 3:
-//					sprintf(pkt_out->name,"PRESS");
-//					return 1;
-//				case 4:
-//					sprintf(pkt_out->name,"HUMIDITY");
-//					return 1;
-//#endif
-//				default:
-//					pkt_out->msg = ERROR_PKT_MSG;
-//			}
 			return 1;
 		case GET_SENSACT: // Dummy sensor handler
 			pkt_out->msg = GET_SENSACT_ACK;

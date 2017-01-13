@@ -24,5 +24,6 @@ void add_sensact(sensor_descriptor_t sensor);
 void read_sensact(uint32_t device_addr, char sensact_addr, sensact_rw_result_t* result);
 void write_sensact(uint32_t device_addr, char sensact_addr, double data, sensact_rw_result_t* result);
 unsigned char get_sensact_num();
+sensor_descriptor_t* get_sensact_by_name(char* name);
 
 #endif /* EXAMPLES_IPV6_RPL_UDP_TRUE2AIR_SPGBZ_H_ */

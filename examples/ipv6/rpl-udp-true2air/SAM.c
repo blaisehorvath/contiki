@@ -86,3 +86,13 @@ unsigned char get_sensact_num() {
 
 	return SENSACTS_MAX_NUM;
 };
+
+sensor_descriptor_t* get_sensact_by_name(char* name) {
+	unsigned char i;
+
+	for ( i=0; i<SENSACTS_MAX_NUM; i++ ) {
+		//TODO: !!!!!!!!! continue from here, get strcmp right
+		if(device_list[i].dev_id != 0 && strcmp(device_list[i].name, name)==0 ) return &device_list[i];
+	}
+	return NULL;
+}
