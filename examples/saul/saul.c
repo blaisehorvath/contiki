@@ -3,7 +3,6 @@
 #define BL_LEVEL 0x00
 #define BL_PIN_NUMBER 0x0B
 #define BL_ENABLE 0xC5
-#define MMEM_CONF_SIZE 2048
 
 /*---------------------------------------------------------------------------*/
 #include <stdio.h>
@@ -11,17 +10,8 @@
 #include "contiki-conf.h"
 #include "SAM.h"
 #include "bus_manager.h"
-#include "tru2air_i2c_com.h"
-
-// temporary includes
-#include "board-i2c.h"
 #include "ti-lib.h"
 #include <stdbool.h>
-#include "i2c.h"
-/*---------------------------------------------------------------------------*/
-
-/*-----------------------------------TESTS-----------------------------------*/
-#include "test_saul.h"
 #include "dev/leds.h"
 
 
@@ -95,9 +85,6 @@ PROCESS_THREAD(saul, ev, data)
 
   /* Init SAM */
   init_SAM();
-
-  /* RUnning tests */
-  runTests();
 
   int slave_init = 0;
   int i = 0;

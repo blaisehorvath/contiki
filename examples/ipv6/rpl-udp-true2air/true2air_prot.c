@@ -15,7 +15,6 @@
 #include "dev/leds.h"
 
 #ifndef SIMULATED
-#include "board-i2c.h"
 #endif
 
 #define NO_INTERFACE 0xFF
