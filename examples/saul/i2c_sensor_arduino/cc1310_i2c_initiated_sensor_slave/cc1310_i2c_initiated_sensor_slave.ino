@@ -43,9 +43,10 @@ void setup() {
   Wire.write(0xbe);      
   Wire.write(0xef);     
   Wire.endTransmission(false);    // stop transmitting
- 
+  Wire.requestFrom(0x10, 1,false);    // request 6 bytes from slave device #8 
+
   
-  Wire.requestFrom(0x10, 1);    // request 6 bytes from slave device #8 
+
   
   while (Wire.available()) { // slave may send less than requested
     I2C_SLAVE_ADDRESS = Wire.read(); // receive a byte as characterl
