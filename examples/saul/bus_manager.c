@@ -13,6 +13,13 @@ void init_i2c_bus_manager () {
 	}
 }
 
+void bus_manager_clear_i2c_slave_data_int () {
+	// Clearing the event
+	I2CSlaveIntClear(I2C0_BASE, I2C_SLAVE_INT_DATA | I2C_SLAVE_INT_START | I2C_SLAVE_INT_STOP);
+
+	(void)I2CSlaveDataGet(I2C0_BASE);
+}
+
 uint8_t register_i2c_device(uint32_t dev_addr) {
 	unsigned char i; //the 0 i2c address is reserved for the msp430
 	for (i = 1; i<127; i++) {
@@ -32,7 +39,7 @@ void remove_i2c_device (uint8_t i2c_addr) {
 	//TODO: remove the dev from spgbz too!!!
 }
 
-void init_i2c_slave(uint8_t slave_addr, void (i2c_slave_data_isr)()) {
+void bus_manager_init_i2c_slave(uint8_t slave_addr) {
 	/* Initing the slave module */
 
 	/* First, make sure the SERIAL PD is on */
@@ -51,17 +58,22 @@ void init_i2c_slave(uint8_t slave_addr, void (i2c_slave_data_isr)()) {
 	IOCPinTypeI2c(I2C0_BASE, CC1310_IOID_SDA, CC1310_IOID_SCL);
 
 	//------------------------------------------------------------------
-
-	/* Setting up the interrupt */
-	I2CIntRegister(I2C0_BASE , i2c_slave_data_isr);
-
 	I2CSlaveIntEnable(I2C0_BASE, I2C_SLAVE_INT_DATA);
 
 	/* Enable and initialize the I2C slave module */
 	I2CSlaveInit(I2C0_BASE, slave_addr);
 }
 
-void disable_i2c_slave() {
+void bus_manager_register_i2c_isr (void (i2c_slave_data_isr)()) {
+
+	/* Setting up the interrupt */
+	I2CIntRegister(I2C0_BASE , i2c_slave_data_isr);
+
+}
+
+void bus_manager_disable_i2c_slave() {
+//	I2CSlaveIntDisable(I2C0_BASE, I2C_SLAVE_INT_DATA);
+
 	if (accessible()) {
 		I2CSlaveDisable(I2C0_BASE);
 	}

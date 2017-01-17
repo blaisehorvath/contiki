@@ -44,7 +44,7 @@ AUTOSTART_PROCESSES(&saul);
 /*---------------------------------------------------------------------------*/
 
 
-void i2c_slave_data_isr () {
+void saul_i2c_slave_isr () {
 	// Reading the Slave Status
 	uint32_t ss = I2CSlaveStatus(I2C0_BASE);
 
@@ -80,6 +80,7 @@ PROCESS_THREAD(saul, ev, data)
 {
   PROCESS_BEGIN();
 
+
   /* Initing the Tru2Air Bus Manager */
   init_i2c_bus_manager();
 
@@ -95,10 +96,18 @@ PROCESS_THREAD(saul, ev, data)
 
 	  					printf("\n[STATE] -> INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
 
+	  					/* Register I2C Slave Interrupt */
+	  					bus_manager_register_i2c_isr(saul_i2c_slave_isr);
+	  					/* comment:
+	  					 * this needs to be re registered EVEN IF THE I2CSlaveIntDisable is removed  from the bus_manager_disable_i2c_slave()...
+	  					 * The first while loop works as intended, but when the second initiation i2c request comes to start the loop from NODE_I2C_SLAVE_INIT everything gets
+	  					 * fucked up if the isr is not registered again with the code above. The following happens -> Interesting because it still generates
+	  					 * one interrupt, but only one, and ACKs too. But after that last interrupt the devide drops the bus.
+						 */
 
+	  					/* Inititng I2C SLAVE as 0x10  and  enabling the registered I2C Slave Interrupt */
+	  					bus_manager_init_i2c_slave(0x10);
 
-	  					/* Inititng I2C SLAVE as 0x10 */
-	  					init_i2c_slave(0x10, i2c_slave_data_isr);
 	  					printf("[STATE] -> NODE_I2C_SLAVE_INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
 	  					slave_init = 1;
 	  			}
@@ -114,7 +123,8 @@ PROCESS_THREAD(saul, ev, data)
 					I2CIntUnregister(I2C0_BASE);
 					printf("[INFO] unregistered the slave interrupts \n");
 
-					disable_i2c_slave();
+					/* Disabling power to slave module and disabling i2c slave data interrupt */
+					bus_manager_disable_i2c_slave();
 					slave_init = 0;
 					printf("[INFO] disabling i2c slave \n");
 

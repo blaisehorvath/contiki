@@ -29,11 +29,12 @@
 
 //TODO: doc
 bool board_i2c_read_until(uint8_t *data, char end);
-void disable_i2c_slave();
-void init_i2c_slave(uint8_t slave_addr, void (i2c_slave_data_isr)());
+void bus_manager_disable_i2c_slave();
+void bus_manager_init_i2c_slave(uint8_t slave_addr);
 static bool accessible(void);
 static bool i2c_status();
-
+void bus_manager_clear_i2c_slave_data_int();
+void bus_manager_register_i2c_isr (void (i2c_slave_data_isr)());
 /**
  * This function initializes the bus manager.
  *
