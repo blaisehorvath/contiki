@@ -72,7 +72,7 @@ void bus_manager_register_i2c_isr (void (i2c_slave_data_isr)()) {
 }
 
 void bus_manager_disable_i2c_slave() {
-//	I2CSlaveIntDisable(I2C0_BASE, I2C_SLAVE_INT_DATA);
+	I2CSlaveIntDisable(I2C0_BASE, I2C_SLAVE_INT_DATA);
 
 	if (accessible()) {
 		I2CSlaveDisable(I2C0_BASE);
