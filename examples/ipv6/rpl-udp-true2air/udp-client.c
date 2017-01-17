@@ -125,9 +125,6 @@ AUTOSTART_PROCESSES(&udp_client_process);
 static void
 tcpip_handler(void)
 {
-  static unsigned int slave_addr = 0x10;
-  init_i2c_slave(slave_addr, i2c_slave_data_isr);
-  printf("started i2c slave on 0x%02x \n",slave_addr);
   rfnode_pkt pkt_out;
   rfnode_pkt *pkt_in;
   memset(&pkt_out,0,sizeof(rfnode_pkt));
@@ -217,10 +214,11 @@ set_global_address(void)
 PROCESS_THREAD(udp_client_process, ev, data)
 {
   static struct etimer periodic;
+  static struct etimer led_off;
 
   PROCESS_BEGIN();
 
-  PROCESS_PAUSE();
+//  PROCESS_PAUSE();
 
   /* SAM stuff --------------------------------------------------------------*/
   init_SAM();
@@ -228,9 +226,9 @@ PROCESS_THREAD(udp_client_process, ev, data)
   add_sensact(red_led);
   add_sensact(green_led);
 
-  sensact_rw_result_t led_result;
-  write_sensact(ONBOARD_DEV_ADDR, 0x01, 1, &led_result);
-  write_sensact(ONBOARD_DEV_ADDR, 0x02, 1, &led_result);
+//  sensact_rw_result_t led_result;
+//  write_sensact(ONBOARD_DEV_ADDR, 0x01, 1, &led_result);
+//  write_sensact(ONBOARD_DEV_ADDR, 0x02, 1, &led_result);
 
   printf("board sensact num is %d \n", get_sensact_num());
   /* SAM stuff end -----------------------------------------------------------*/
@@ -261,21 +259,33 @@ PROCESS_THREAD(udp_client_process, ev, data)
   serial_line_init();
 
   etimer_set(&periodic, SEND_INTERVAL);
-  printf("sizeof(rfnode_pkt:%d \n",sizeof(rfnode_pkt));
+  printf("sizeof(rfnode_pkt:%d) \n",sizeof(rfnode_pkt));
   leds_arch_init();
+//  etimer_set(&led_off, 100);
+//  leds_toggle(LEDS_RED);
 
+  /*
+   * i2c stuff
+   */
+  bus_manager_register_i2c_isr(bus_manager_clear_i2c_slave_data_int);
+  bus_manager_init_i2c_slave(0x10);
+  leds_toggle(LEDS_RED);
 
-
+  printf("[STATUS] listening to UDP communication\n");
 
   while(1) {
-    PROCESS_YIELD();
-    if(ev == tcpip_event) {
-      tcpip_handler();
-    }
-    if(etimer_expired(&periodic) && !node_is_initialized()){
-    	etimer_reset(&periodic);
-    	send_init_packet(0);
-    }
+//    PROCESS_WAIT_EVENT();
+//    if(ev == tcpip_event) {
+//      tcpip_handler();
+//    }
+//    if(etimer_expired(&periodic) && !node_is_initialized()){
+//    	etimer_reset(&periodic);
+//    	send_init_packet(0);
+//    }
+//    if(etimer_expired(&led_off)){
+//    	etimer_reset(&led_off);
+//    	leds_toggle(LEDS_RED);
+//    }
   }
 
   PROCESS_END();
