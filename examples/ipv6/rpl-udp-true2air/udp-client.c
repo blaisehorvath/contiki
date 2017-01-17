@@ -76,6 +76,7 @@ static uip_ipaddr_t server_ipaddr;
 #include "SAM.h"
 #include "tru2air_comm.h"
 #include "cc1310_onboard_devices.h"
+#include "bus_manager.h"
 
 /* Globals */
 extern sensor_descriptor_t green_led, red_led;
@@ -86,8 +87,16 @@ unsigned char rec_bytes = 4;
 unsigned char buff [5];
 volatile  tru2air_sensor_node_t DEVICE = {0,0,0};
 unsigned char currentSensor = 0; //TODO: reset on the proper place
+void init_tru2air_sensor_node();
+void clearBuffer();
+
+/*---------------------------------------------------------------------------*/
+PROCESS(udp_client_process, "UDP client process");
+AUTOSTART_PROCESSES(&udp_client_process);
+/*---------------------------------------------------------------------------*/
+/*								tru2air i2c isr							     */
+/*---------------------------------------------------------------------------*/
 void i2c_slave_data_isr () {
-	printf("\n>>>int<<<\n");
 	// Reading the Slave Status
 	uint32_t ss = I2CSlaveStatus(I2C0_BASE);
 
@@ -101,31 +110,25 @@ void i2c_slave_data_isr () {
 	// If the first byte (FBR) or any master written byte arrived from the master
 	if( (I2C_SLAVE_ACT_RREQ_FBR | I2C_SLAVE_ACT_RREQ) & ss) {
 		master_dev_id_buff[--rec_bytes] = (unsigned char) I2CSlaveDataGet(I2C0_BASE);
-//		if (rec_bytes == 0) {
-//			rec_bytes = 4;
-//			memcpy(&(DEVICE.dev_addr), master_dev_id_buff, 4);
-//			DEVICE.i2c_addr = register_i2c_device(DEVICE.dev_addr);
-//		}
+		if (rec_bytes == 0) {
+			rec_bytes = 4;
+			memcpy(&(DEVICE.dev_addr), master_dev_id_buff, 4);
+			DEVICE.i2c_addr = register_i2c_device(DEVICE.dev_addr);
+		}
 	}
 	// If a read byte request came from the master
 	else if ( I2C_SLAVE_ACT_TREQ & ss ) {
-		I2CSlaveDataPut(I2C0_BASE, 0x02);
+		I2CSlaveDataPut(I2C0_BASE, DEVICE.i2c_addr);
 
 
 		// switching state to DEVICE init
 		STATE = NODE_I2C_MASTER_INIT;
+		process_poll(&udp_client_process);
 	}
-
 	//TODO: make an else for error handling
-
 }
-
 /*---------------------------------------------------------------------------*/
-PROCESS(udp_client_process, "UDP client process");
-AUTOSTART_PROCESSES(&udp_client_process);
-/*---------------------------------------------------------------------------*/
-static void
-tcpip_handler(void)
+static void tcpip_handler(void)
 {
   rfnode_pkt pkt_out;
   rfnode_pkt *pkt_in;
@@ -222,6 +225,12 @@ PROCESS_THREAD(udp_client_process, ev, data)
 
   PROCESS_PAUSE();
 
+
+  /* Bus manager stuff -------------------------------------------------------*/
+  init_i2c_bus_manager();
+  /*---------------------------------------------------------------------------*/
+
+
   /* SAM stuff --------------------------------------------------------------*/
   init_SAM();
 
@@ -286,8 +295,124 @@ PROCESS_THREAD(udp_client_process, ev, data)
     	leds_toggle(LEDS_RED);
     	etimer_reset(&led_off);
     }
+    if(ev == PROCESS_EVENT_POLL) {
+    	init_tru2air_sensor_node();
+    }
   }
 
   PROCESS_END();
 }
 /*---------------------------------------------------------------------------*/
+void init_tru2air_sensor_node(){
+	bool tru2air_sensor_device_inited = false;
+	unsigned char headerBuff[2];
+	unsigned char nameBuff[23];
+	unsigned char typeBuff[2];
+	unsigned char sensactBuff[5];
+
+	while (!tru2air_sensor_device_inited) {
+		switch (STATE) {
+			case (I2C_SLAVE_LISTEN):
+
+				printf("\n[STATE] -> INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
+
+				/* Register I2C Slave Interrupt */
+				bus_manager_register_i2c_isr(i2c_slave_data_isr);
+				/* comment:
+				 * this needs to be re registered EVEN IF THE I2CSlaveIntDisable is removed  from the bus_manager_disable_i2c_slave()...
+				 * The first while loop works as intended, but when the second initiation i2c request comes to start the loop from NODE_I2C_SLAVE_INIT everything gets
+				 * fucked up if the isr is not registered again with the code above. The following happens -> Interesting because it still generates
+				 * one interrupt, but only one, and ACKs too. But after that last interrupt the devide drops the bus.
+				 */
+
+				/* Inititng I2C SLAVE as 0x10  and  enabling the registered I2C Slave Interrupt */
+				bus_manager_init_i2c_slave(0x10);
+
+				printf(
+						"[STATE] -> NODE_I2C_SLAVE_INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n",
+						DEVICE.i2c_addr, DEVICE.dev_addr);
+				tru2air_sensor_device_inited = true;
+				break;
+
+			case (NODE_I2C_MASTER_INIT):
+
+				printf("[STATE] -> NODE_I2C_MASTER_INIT\n");
+
+				if (DEVICE.i2c_addr) {
+
+					//Unregister the slave interrupt and turn off slave mode
+					I2CIntUnregister(I2C0_BASE);
+					printf("[INFO] unregistered the slave interrupts \n");
+
+					/* Disabling power to slave module and disabling i2c slave data interrupt */
+					bus_manager_disable_i2c_slave();
+					printf("[INFO] disabling i2c slave \n");
+
+					// Wake up as master
+					board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
+					board_i2c_write_single(GET_SENSACT_NUM);
+					clearBuffer();
+					board_i2c_read(sensactBuff, 5); //TODO: error handling, check if the dev address is valid and maybe if the SENSACT num is >0?
+					DEVICE.sensact_num = sensactBuff[4];
+					currentSensor = 0;
+					board_i2c_shutdown();
+
+					printf("[INFO] tru2air sensor node: 0x%08x has 0x%02x sensors\n",
+							DEVICE.dev_addr, DEVICE.sensact_num);
+
+					STATE = REQUIRE_SENSACT_NAME;
+				}
+				break;
+
+			case (REQUIRE_SENSACT_NAME):
+				headerBuff[0] = GET_SENSOR_NAME;
+				headerBuff[1] = currentSensor;
+				if (++currentSensor == DEVICE.sensact_num) {
+					STATE = REQUIRE_SENSOR_RETURN_TYPE;
+					currentSensor = 0;
+				}
+
+				printf("[STATE] -> GET_SENSOR_NAME\n");
+
+				board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
+				board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_SIZE);
+				board_i2c_read_until(nameBuff, '\0');
+				board_i2c_shutdown();
+
+				break;
+
+			case (REQUIRE_SENSOR_RETURN_TYPE):
+
+				headerBuff[0] = GET_SENSOR_TYPE;
+				headerBuff[1] = currentSensor;
+				if (++currentSensor == DEVICE.sensact_num) {
+					currentSensor = 0;
+					STATE = I2C_SLAVE_LISTEN;
+				}
+
+				printf("[STATE] -> GET_SENSOR_TYPE");
+				board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
+				board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_SIZE);
+				board_i2c_read(typeBuff, 1);
+				board_i2c_shutdown();
+
+				//TODO: Registering to SAM
+
+				break;
+
+			default:
+				printf(
+						"[STATE] -> DEFAULT\n[INFO] tru2air sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n",
+						DEVICE.i2c_addr, DEVICE.dev_addr);
+				break;
+		}
+	}
+}
+
+
+void clearBuffer() {
+	unsigned char i;
+	for(i=0 ; i<5; i++ ) {
+		buff[i]=0;
+	}
+}
