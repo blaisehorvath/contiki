@@ -20,6 +20,10 @@ void bus_manager_clear_i2c_slave_data_int () {
 	(void)I2CSlaveDataGet(I2C0_BASE);
 }
 
+void bus_manager_r_sensact(){
+
+}
+
 uint8_t register_i2c_device(uint32_t dev_addr) {
 	unsigned char i; //the 0 i2c address is reserved for the msp430
 	for (i = 1; i<127; i++) {

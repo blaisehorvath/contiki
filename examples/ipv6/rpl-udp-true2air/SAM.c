@@ -47,7 +47,7 @@ void read_sensact(uint32_t device_addr, char sensact_addr, sensact_rw_result_t* 
 	_Bool found;
 	for (i = 0; i < SENSACTS_MAX_NUM; i++) {
 		if(device_list[i].dev_id == device_addr && device_list[i].sensor_id == sensact_addr) {
-			device_list[i].read(result);
+			device_list[i].read(&device_addr, &sensact_addr, result);
 			found = 1;
 			break;
 		}
@@ -65,7 +65,7 @@ void write_sensact(uint32_t device_addr, char sensact_addr, double data, sensact
 
 	for (i=0; i < SENSACTS_MAX_NUM; i++) {
 		if(device_list[i].dev_id == device_addr && device_list[i].sensor_id == sensact_addr) {
-			device_list[i].write(data, result);
+			device_list[i].write(&device_addr, &sensact_addr, data, result);
 			found = 1;
 			break;
 		}
@@ -91,7 +91,6 @@ sensor_descriptor_t* get_sensact_by_name(char* name) {
 	unsigned char i;
 
 	for ( i=0; i<SENSACTS_MAX_NUM; i++ ) {
-		//TODO: !!!!!!!!! continue from here, get strcmp right
 		if(device_list[i].dev_id != 0 && strcmp(device_list[i].name, name)==0 ) return &device_list[i];
 	}
 	return NULL;

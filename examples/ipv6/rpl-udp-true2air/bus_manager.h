@@ -73,8 +73,8 @@ uint32_t i2c_devices [127];
  * sensor_descriptor_t is a structure which holds all the parameters needed to initialize a sensor
  */
 typedef struct sensor_descriptor_item{
-	void (*read) (sensact_rw_result_t* result);
-	void (*write)(double toWrite, sensact_rw_result_t* result);
+	void (*read) (uint32_t* device_addr, char* sensact_id, sensact_rw_result_t* result);
+	void (*write)(uint32_t* device_addr, char* sensact_id, double toWrite, sensact_rw_result_t* result);
 	char name[23];
 	uint32_t dev_id;
 	uint8_t sensor_id;

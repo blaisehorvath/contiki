@@ -24,7 +24,7 @@ sensor_descriptor_t green_led = {
  *						Red led
  *--------------------------------------------------------------*/
 
-void set_red_led (double toWrite, sensact_rw_result_t* result) {
+void set_red_led (uint32_t* dev_addr, char* sensact_id, double toWrite, sensact_rw_result_t* result) {
 	if (toWrite == 1) {
 		leds_on(LEDS_RED);
 		result->data = 1;
@@ -41,7 +41,7 @@ void set_red_led (double toWrite, sensact_rw_result_t* result) {
 	}
 }
 
-void read_red_led (sensact_rw_result_t* result) {
+void read_red_led (uint32_t* dev_addr, char* sensact_id, sensact_rw_result_t* result) {
 	/*
 	 * The leds get returns the result of the ti_lib's led arch get, which returns
 	 * 0 if the value is 0 or if something went wrong, so there is no way to
@@ -63,7 +63,7 @@ void read_red_led (sensact_rw_result_t* result) {
  *--------------------------------------------------------------*/
 
 
-void set_green_led (double toWrite, sensact_rw_result_t* result) {
+void set_green_led (uint32_t* dev_addr, char* sensact_id, double toWrite, sensact_rw_result_t* result) {
 	if (toWrite == 1) {
 		leds_on(LEDS_GREEN);
 		result->data = 1;
@@ -80,7 +80,7 @@ void set_green_led (double toWrite, sensact_rw_result_t* result) {
 	}
 }
 
-void read_green_led (sensact_rw_result_t* result) {
+void read_green_led (uint32_t* dev_addr, char* sensact_id, sensact_rw_result_t* result) {
 	/*
 	 * The leds get returns the result of the ti_lib's led arch get, which returns
 	 * 0 if the value is 0 or if something went wrong, so there is no way to
