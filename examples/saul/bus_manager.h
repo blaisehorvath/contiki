@@ -49,7 +49,7 @@ void init_i2c_bus_manager ();
  * @param uint32_t devAddr Is the address that was burnt into the sensor device's firmware.
  * @returns uint8_t 0 if error happens else returns a valid i2c slave address (1-127) because the address 0 is reserved for the msp430 on the Tru2Air node.
  */
-uint8_t register_i2c_device();
+uint8_t bus_manager_register_i2c_device();
 
 
 /**
@@ -58,7 +58,7 @@ uint8_t register_i2c_device();
  * When a device is no longer reachable it is automatically removed. This function also calls the proper function
  * that removes every sensor related to this device from the spgbz.
  */
-void remove_i2c_device (uint8_t i2c_addr);
+void bus_manager_unregister_i2c_device (uint8_t i2c_addr);
 
 /*!
  * This array holds the device ids of the connected i2c devices.
@@ -72,7 +72,7 @@ uint32_t i2c_devices [127];
 /*!
  * sensor_descriptor_t is a structure which holds all the parameters needed to initialize a sensor
  */
-typedef struct sensor_descriptor_item{
+typedef struct sensor_descriptor_t {
 	void (*read) (sensact_rw_result_t* result);
 	void (*write)(double toWrite, sensact_rw_result_t* result);
 	char name[23];

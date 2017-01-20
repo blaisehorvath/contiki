@@ -2,7 +2,8 @@
 
 //STATES
 //communication states
-enum I2C_COMM_PROT_ACTION {GET_SENSACT_NUM, GET_SENSOR_NAME, GET_SENSOR_TYPE, SENSOR_READ, SENS_ACT_WRITE};
+enum I2C_COMM_PROT_ACTION {GET_SENSACT_NUM, GET_SENSOR_NAME, GET_SENSOR_TYPE, SENS_ACT_READ, SENS_ACT_WRITE};
+
 
 // Sensor return types
 enum TRU2AIR_SENSOR_DATA_TYPE {SENS_DOUBLE, SENS_UINT32 };
@@ -105,7 +106,10 @@ void receiveCb(int numBytes) {
 void requestCb() {
 //  Serial.print("[REQUEST]\n");
   bool endOfMsg = false;
-  unsigned char msgChar = 0;
+  double dummyMsg = 1;
+
+  //TODO:remove this
+  double ans = 0;
 
   switch(STATE) {
     case GET_SENSACT_NUM:
@@ -124,7 +128,11 @@ void requestCb() {
       Serial.print(sizeof(sensors[HEADER.specifier].type));
       Wire.write(sensors[HEADER.specifier].type);
       break;
-      
+
+    case SENS_ACT_READ:
+      Wire.write((char*)&dummyMsg, sizeof(double));
+      break;      
+
     default:
       break;
   }

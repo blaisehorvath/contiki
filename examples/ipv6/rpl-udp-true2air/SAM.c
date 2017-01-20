@@ -7,7 +7,7 @@
 //TODO: theoretically this array can be greater that one byte, but not sure if that ever will be the case...
 sensor_descriptor_t device_list[SENSACTS_MAX_NUM];
 
-void init_SAM() {
+void sam_init() {
 	int i;
 	for (i = 0; i<SENSACTS_MAX_NUM; i++) {
 		device_list[i] = (sensor_descriptor_t){0,0,"",0,0};
@@ -15,7 +15,7 @@ void init_SAM() {
 }
 
 //TODO: this deletes a device, not just a single sensor! Should it be handled?
-void del_device(uint32_t dev_id) {
+void sam_del_device(uint32_t dev_id) {
 	int i;
 	for (i = 0; i < SENSACTS_MAX_NUM; i++) {
 		if (device_list[i].dev_id != 0 && device_list[i].dev_id == dev_id) {
@@ -28,7 +28,7 @@ void del_device(uint32_t dev_id) {
 	}
 }
 
-void add_sensact(sensor_descriptor_t sensor) {
+void sam_add_sensact(sensor_descriptor_t sensor) {
 	int i;
 	for (i = 0; i < SENSACTS_MAX_NUM; i++) {
 		if (device_list[i].dev_id == 0) {
@@ -42,7 +42,7 @@ void add_sensact(sensor_descriptor_t sensor) {
 	}
 }
 
-void read_sensact(uint32_t device_addr, char sensact_addr, sensact_rw_result_t* result) {
+void sam_read_sensact(uint32_t device_addr, char sensact_addr, sensact_rw_result_t* result) {
 	int i;
 	_Bool found;
 	for (i = 0; i < SENSACTS_MAX_NUM; i++) {
@@ -59,7 +59,7 @@ void read_sensact(uint32_t device_addr, char sensact_addr, sensact_rw_result_t* 
 	}
 }
 
-void write_sensact(uint32_t device_addr, char sensact_addr, double data, sensact_rw_result_t* result) {
+void sam_write_sensact(uint32_t device_addr, char sensact_addr, double data, sensact_rw_result_t* result) {
 	int i;
 	_Bool found;
 
@@ -77,7 +77,7 @@ void write_sensact(uint32_t device_addr, char sensact_addr, double data, sensact
 	}
 }
 
-unsigned char get_sensact_num() {
+unsigned char sam_get_sensact_num() {
 	unsigned char i;
 
 	for (i=0; i<SENSACTS_MAX_NUM; i++) {
@@ -87,7 +87,7 @@ unsigned char get_sensact_num() {
 	return SENSACTS_MAX_NUM;
 };
 
-sensor_descriptor_t* get_sensact_by_name(char* name) {
+sensor_descriptor_t* sam_get_sensact_by_name(char* name) {
 	unsigned char i;
 
 	for ( i=0; i<SENSACTS_MAX_NUM; i++ ) {

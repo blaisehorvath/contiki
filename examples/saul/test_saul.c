@@ -31,8 +31,8 @@ int i;
 _Bool testAddItem () {
 	sensor_descriptor_t sensor = (sensor_descriptor_t){testFunc, testFunc, "test",42,3};
 	sensor_descriptor_t sensor2 = (sensor_descriptor_t){testFunc, testFunc, "test",42,3};
-	add_sensact(sensor);
-	add_sensact(sensor2);
+	sam_add_sensact(sensor);
+	sam_add_sensact(sensor2);
 	if (device_list[0].dev_id==42 && device_list[1].dev_id==42) {
 		return (_Bool)1;
 	} else {
@@ -41,7 +41,7 @@ _Bool testAddItem () {
 }
 
 _Bool testDeleteItem () {
-	del_device(42);
+	sam_del_device(42);
 	if (device_list[0].dev_id==0 && device_list[1].dev_id==0) {
 		return (_Bool)1;
 	}
@@ -67,9 +67,9 @@ _Bool testBoardManInit () {
 
 _Bool testBoardManAddItem () {
 	unsigned int a,b,c;
-	a = register_i2c_device(123123);
-	b = register_i2c_device(124124);
-	c = register_i2c_device(123123);
+	a = bus_manager_register_i2c_device(123123);
+	b = bus_manager_register_i2c_device(124124);
+	c = bus_manager_register_i2c_device(123123);
 
 	if (a!=1 || b!=2 || c!=1 ) return (_Bool)0;
 

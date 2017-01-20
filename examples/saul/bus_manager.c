@@ -20,7 +20,7 @@ void bus_manager_clear_i2c_slave_data_int () {
 	(void)I2CSlaveDataGet(I2C0_BASE);
 }
 
-uint8_t register_i2c_device(uint32_t dev_addr) {
+uint8_t bus_manager_register_i2c_device(uint32_t dev_addr) {
 	unsigned char i; //the 0 i2c address is reserved for the msp430
 	for (i = 1; i<127; i++) {
 		if(i2c_devices[i]==dev_addr) { // if the device reconnected before the manager had time to remove it
@@ -34,7 +34,7 @@ uint8_t register_i2c_device(uint32_t dev_addr) {
 	return 0;
 }
 
-void remove_i2c_device (uint8_t i2c_addr) {
+void bus_manager_unregister_i2c_device (uint8_t i2c_addr) {
 	i2c_devices[i2c_addr] = 0;
 	//TODO: remove the dev from spgbz too!!!
 }

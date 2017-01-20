@@ -9,7 +9,7 @@
 #ifndef EXAMPLES_SAUL_TRU2AIR_I2C_COM_H_
 #define EXAMPLES_SAUL_TRU2AIR_I2C_COM_H_
 
-enum I2C_COMM_PROT_ACTION {GET_SENSACT_NUM, GET_SENSOR_NAME, GET_SENSOR_TYPE, SENSOR_READ, SENS_ACT_WRITE};
+enum I2C_COMM_PROT_ACTION {GET_SENSACT_NUM, GET_SENSOR_NAME, GET_SENSOR_TYPE, SENS_ACT_READ, SENS_ACT_WRITE};
 
 enum TRU2AIR_SENSOR_DATA_TYPE {SENS_DOUBLE, SENS_UINT32 };
 
@@ -32,7 +32,7 @@ typedef struct tru2air_sensor_node_t {
 } tru2air_sensor_node_t;
 
 /*! bus_comm_t describes a data type which is returned both from the
- * i2c bus and to the spgbz as a data value from a sensor
+ * i2c bus and to the SAM as a data value from a sensor
  * err is the flag which is true if some kind of error occured during the transmission
  * data is the data returned
  */

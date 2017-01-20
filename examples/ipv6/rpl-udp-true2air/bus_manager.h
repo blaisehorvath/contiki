@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 //#include "board-i2c.h"
+//#include "cpu/cc26xx-cc13xx/ti-lib.h"
 #include "ti-lib.h"
 #include "tru2air_comm.h"
 
@@ -35,6 +36,18 @@ static bool accessible(void);
 static bool i2c_status();
 void bus_manager_clear_i2c_slave_data_int();
 void bus_manager_register_i2c_isr (void (i2c_slave_data_isr)());
+
+/*!
+ * sensor_descriptor_t is a structure which holds all the parameters needed to initialize a sensor
+ */
+typedef struct sensor_descriptor_t {
+	void (*read) (uint32_t* device_addr, char* sensact_id, sensact_rw_result_t* result);
+	void (*write)(uint32_t* device_addr, char* sensact_id, double toWrite, sensact_rw_result_t* result);
+	char name[23];
+	uint32_t dev_id;
+	uint8_t sensor_id;
+} sensor_descriptor_t;
+
 /**
  * This function initializes the bus manager.
  *
@@ -49,7 +62,7 @@ void init_i2c_bus_manager ();
  * @param uint32_t devAddr Is the address that was burnt into the sensor device's firmware.
  * @returns uint8_t 0 if error happens else returns a valid i2c slave address (1-127) because the address 0 is reserved for the msp430 on the Tru2Air node.
  */
-uint8_t register_i2c_device();
+uint8_t bus_manager_register_i2c_device();
 
 
 /**
@@ -58,7 +71,7 @@ uint8_t register_i2c_device();
  * When a device is no longer reachable it is automatically removed. This function also calls the proper function
  * that removes every sensor related to this device from the spgbz.
  */
-void remove_i2c_device (uint8_t i2c_addr);
+void bus_manager_unregister_i2c_device (uint8_t i2c_addr);
 
 /*!
  * This array holds the device ids of the connected i2c devices.
@@ -70,15 +83,11 @@ void remove_i2c_device (uint8_t i2c_addr);
 uint32_t i2c_devices [127];
 
 /*!
- * sensor_descriptor_t is a structure which holds all the parameters needed to initialize a sensor
+ * This function returns the i2c address of a sensact if it was registered by the bus manager.
+ * If the device is not found the unsigned int 0x00 is returned
  */
-typedef struct sensor_descriptor_item{
-	void (*read) (uint32_t* device_addr, char* sensact_id, sensact_rw_result_t* result);
-	void (*write)(uint32_t* device_addr, char* sensact_id, double toWrite, sensact_rw_result_t* result);
-	char name[23];
-	uint32_t dev_id;
-	uint8_t sensor_id;
-} sensor_descriptor_t;
+uint8_t bus_manager_get_sensact_i2c_id (sensor_descriptor_t* sensact);
+
 /*!
  * i2c_read function is the function which is called when
  * one tries to access a sensor which is attached to the i2c bus

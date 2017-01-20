@@ -113,7 +113,7 @@ void i2c_slave_data_isr () {
 		if (rec_bytes == 0) {
 			rec_bytes = 4;
 			memcpy(&(DEVICE.dev_addr), master_dev_id_buff, 4);
-			DEVICE.i2c_addr = register_i2c_device(DEVICE.dev_addr);
+			DEVICE.i2c_addr = bus_manager_register_i2c_device(DEVICE.dev_addr);
 		}
 	}
 	// If a read byte request came from the master
@@ -232,16 +232,16 @@ PROCESS_THREAD(udp_client_process, ev, data)
 
 
   /* SAM stuff --------------------------------------------------------------*/
-  init_SAM();
+  sam_init();
 
-  add_sensact(red_led);
-  add_sensact(green_led);
+  sam_add_sensact(red_led);
+  sam_add_sensact(green_led);
 
   sensact_rw_result_t led_result;
-  write_sensact(ONBOARD_DEV_ADDR, 0x02, 1, &led_result);
-  write_sensact(ONBOARD_DEV_ADDR, 0x01, 1, &led_result);
+//  write_sensact(ONBOARD_DEV_ADDR, 0x02, 1, &led_result);
+//  write_sensact(ONBOARD_DEV_ADDR, 0x01, 1, &led_result);
 
-  printf("board sensact num is %d \n", get_sensact_num());
+  printf("board sensact num is %d \n", sam_get_sensact_num());
   /* SAM stuff end -----------------------------------------------------------*/
 
 
@@ -313,6 +313,9 @@ void init_tru2air_sensor_node(){
 	while (!tru2air_sensor_device_inited) {
 		switch (STATE) {
 			case (I2C_SLAVE_LISTEN):
+
+				/* Reseting DEVICE */
+				DEVICE = (tru2air_sensor_node_t){0,0,0};
 
 				printf("\n[STATE] -> INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
 

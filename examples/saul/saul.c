@@ -61,7 +61,7 @@ void saul_i2c_slave_isr () {
 		if (rec_bytes == 0) {
 			rec_bytes = 4;
 			memcpy(&(DEVICE.dev_addr), master_dev_id_buff, 4);
-			DEVICE.i2c_addr = register_i2c_device(DEVICE.dev_addr);
+			DEVICE.i2c_addr = bus_manager_register_i2c_device(DEVICE.dev_addr);
 		}
 	}
 	// If a read byte request came from the master
@@ -85,7 +85,7 @@ PROCESS_THREAD(saul, ev, data)
   init_i2c_bus_manager();
 
   /* Init SAM */
-  init_SAM();
+  sam_init();
 
   int slave_init = 0;
   int i = 0;

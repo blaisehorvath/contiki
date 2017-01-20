@@ -2,13 +2,15 @@
 #include <stdio.h>
 #include <string.h>
 
+#define I2C_BUS_ADDRESS_RANGE 127
+
 static uint8_t slave_addr = 0x07;
 static uint8_t interface = NO_INTERFACE;
 
 void init_i2c_bus_manager () {
 
 	int i;
-	for (i = 0; i<127; i++) {
+	for (i = 0; i<I2C_BUS_ADDRESS_RANGE; i++) {
 		i2c_devices[i] = 0;
 	}
 }
@@ -20,13 +22,28 @@ void bus_manager_clear_i2c_slave_data_int () {
 	(void)I2CSlaveDataGet(I2C0_BASE);
 }
 
-void bus_manager_r_sensact(){
+void bus_manager_r_sensact(sensor_descriptor_t* sensact, unsigned char i2c_addr, sensact_rw_result_t* result) {
 
+	unsigned char headerBuff[2] = {SENS_ACT_READ, sensact->sensor_id};
+	unsigned resultBuff[sizeof(double)];
+
+	board_i2c_select(BOARD_I2C_INTERFACE_0, i2c_addr);
+	board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_SIZE);
+	board_i2c_read((char*)&(result->data), sizeof(double));
+	board_i2c_shutdown();
 }
 
-uint8_t register_i2c_device(uint32_t dev_addr) {
+uint8_t bus_manager_get_sensact_i2c_id (sensor_descriptor_t* sensact) {
+	unsigned char i;
+	for(i=1; i<I2C_BUS_ADDRESS_RANGE; i++) {
+		if(i2c_devices[i] == sensact->dev_id) return i;
+	}
+	return 0x00;
+}
+
+uint8_t bus_manager_register_i2c_device(uint32_t dev_addr) {
 	unsigned char i; //the 0 i2c address is reserved for the msp430
-	for (i = 1; i<127; i++) {
+	for (i = 1; i<I2C_BUS_ADDRESS_RANGE; i++) {
 		if(i2c_devices[i]==dev_addr) { // if the device reconnected before the manager had time to remove it
 			return i;
 		}
@@ -38,9 +55,9 @@ uint8_t register_i2c_device(uint32_t dev_addr) {
 	return 0;
 }
 
-void remove_i2c_device (uint8_t i2c_addr) {
+//TODO: maybe remove by dev addr?
+void bus_manager_unregister_i2c_device (uint8_t i2c_addr) {
 	i2c_devices[i2c_addr] = 0;
-	//TODO: remove the dev from spgbz too!!!
 }
 
 void bus_manager_init_i2c_slave(uint8_t slave_addr) {

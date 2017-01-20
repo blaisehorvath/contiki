@@ -5,6 +5,7 @@
  *      Author: v
  */
 #include "true2air_prot.h"
+#include "bus_manager.h"
 #include <stdio.h>
 #include <stdint.h>
 #include "net/ip/uip.h"
@@ -45,7 +46,7 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			pkt_out->data = 0;
 			pkt_out->new_device = 0;
 			sprintf(pkt_out->name,"REPLY FROM NODE!");
-			pkt_out->cnt = get_sensact_num();
+			pkt_out->cnt = sam_get_sensact_num();
 			return 1;
 		case SENSACT_LIST_ITEM:
 			pkt_out->msg = SENSACT_LIST_ITEM;
