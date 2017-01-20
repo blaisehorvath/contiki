@@ -10,10 +10,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-//#include "board-i2c.h"
-//#include "cpu/cc26xx-cc13xx/ti-lib.h"
 #include "ti-lib.h"
-#include "tru2air_comm.h"
+#include "tru2air_i2c_protocol.h"
 
 // DEFINES
 #define NO_INTERFACE 0xFF
@@ -40,13 +38,17 @@ void bus_manager_register_i2c_isr (void (i2c_slave_data_isr)());
 /*!
  * sensor_descriptor_t is a structure which holds all the parameters needed to initialize a sensor
  */
-typedef struct sensor_descriptor_t {
+typedef struct sensact_descriptor_t {
 	void (*read) (uint32_t* device_addr, char* sensact_id, sensact_rw_result_t* result);
-	void (*write)(uint32_t* device_addr, char* sensact_id, double toWrite, sensact_rw_result_t* result);
+	void (*write)(uint32_t* device_addr, char* sensact_addr, double* data, sensact_rw_result_t* result);
 	char name[23];
 	uint32_t dev_id;
 	uint8_t sensor_id;
-} sensor_descriptor_t;
+} sensact_descriptor_t;
+
+//TODO: doc
+void bus_manager_r_sensact(uint32_t* device_addr, char* sensact_id, sensact_rw_result_t* result);
+void bus_manager_w_sensact(uint32_t* device_addr, char* sensact_addr, double* toWrite, sensact_rw_result_t* result);
 
 /**
  * This function initializes the bus manager.
@@ -86,7 +88,7 @@ uint32_t i2c_devices [127];
  * This function returns the i2c address of a sensact if it was registered by the bus manager.
  * If the device is not found the unsigned int 0x00 is returned
  */
-uint8_t bus_manager_get_sensact_i2c_id (sensor_descriptor_t* sensact);
+uint8_t bus_manager_get_sensact_i2c_id (uint32_t* device_id);
 
 /*!
  * i2c_read function is the function which is called when

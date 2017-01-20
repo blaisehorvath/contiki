@@ -5,12 +5,12 @@
 #define SENSACTS_MAX_NUM 127
 
 //TODO: theoretically this array can be greater that one byte, but not sure if that ever will be the case...
-sensor_descriptor_t device_list[SENSACTS_MAX_NUM];
+sensact_descriptor_t device_list[SENSACTS_MAX_NUM];
 
 void sam_init() {
 	int i;
 	for (i = 0; i<SENSACTS_MAX_NUM; i++) {
-		device_list[i] = (sensor_descriptor_t){0,0,"",0,0};
+		device_list[i] = (sensact_descriptor_t){0,0,"",0,0};
 	}
 }
 
@@ -28,7 +28,7 @@ void sam_del_device(uint32_t dev_id) {
 	}
 }
 
-void sam_add_sensact(sensor_descriptor_t sensor) {
+void sam_add_sensact(sensact_descriptor_t sensor) {
 	int i;
 	for (i = 0; i < SENSACTS_MAX_NUM; i++) {
 		if (device_list[i].dev_id == 0) {
@@ -87,7 +87,7 @@ unsigned char sam_get_sensact_num() {
 	return SENSACTS_MAX_NUM;
 };
 
-sensor_descriptor_t* sam_get_sensact_by_name(char* name) {
+sensact_descriptor_t* sam_get_sensact_by_name(char* name) {
 	unsigned char i;
 
 	for ( i=0; i<SENSACTS_MAX_NUM; i++ ) {

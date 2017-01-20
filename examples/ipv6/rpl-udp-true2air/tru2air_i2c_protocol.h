@@ -9,9 +9,32 @@
 #ifndef EXAMPLES_SAUL_TRU2AIR_I2C_COM_H_
 #define EXAMPLES_SAUL_TRU2AIR_I2C_COM_H_
 
-enum I2C_COMM_PROT_ACTION {GET_SENSACT_NUM, GET_SENSOR_NAME, GET_SENSOR_TYPE, SENS_ACT_READ, SENS_ACT_WRITE};
+enum TRU2AIR_I2C_HEADER_ACTION {
+	GET_SENSACT_NUM,
+	GET_SENSOR_NAME,
+	GET_SENSOR_TYPE,
+	SENS_ACT_READ,
+	SENS_ACT_WRITE
+};
 
-enum TRU2AIR_SENSOR_DATA_TYPE {SENS_DOUBLE, SENS_UINT32 };
+enum TRU2AIR_CLIENT_NODE_I2C_HANDLER_STATE {
+	I2C_SLAVE_LISTEN,
+	NODE_I2C_MASTER_INIT,
+	REQUIRE_SENSACT_NAME,
+	REQUIRE_SENSOR_RETURN_TYPE,
+	REGISTER_TO_SAM
+};
+
+enum TRU2AIR_SENSOR_DATA_TYPE {
+	SENS_DOUBLE,
+	SENS_UINT32
+};
+
+enum SENSACT_COMM_ERR_T {
+	NO_SENSACT_ERROR, /* There was no error */
+	WRITE_VALIE_OUT_OF_RANGE, /* The write operation exceeded the sensors input range */
+	SENSACT_MISSING /* The adressed sensact is not there (or no longer there) */
+};
 
 /**
  * A stuct that hold an action (see I2C_COMM_PROT_ACTION and e specifier.
@@ -41,10 +64,11 @@ typedef struct sensact_rw_result_t {
 	double data;
 } sensact_rw_result_t;
 
-enum SENSACT_COMM_ERR_T {
-	NO_SENSACT_ERROR, /* There was no error */
-	WRITE_VALIE_OUT_OF_RANGE, /* The write operation exceeded the sensors input range */
-	SENSACT_MISSING /* The adressed sensact is not there (or no longer there) */
-};
+
+/*
+ *  Functions
+ */
+void init_tru2air_sensor_node();
+void init_sensact ();
 
 #endif /* EXAMPLES_SAUL_TRU2AIR_I2C_COM_H_ */

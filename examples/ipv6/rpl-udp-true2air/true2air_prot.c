@@ -22,7 +22,7 @@
 
 /* Includes and globals by Blaise*/
 /* for SAM:*/
-extern sensor_descriptor_t device_list[];
+extern sensact_descriptor_t device_list[];
 
 uint8_t node_initialized = 0;
 uint8_t slave_addr = 0x02;

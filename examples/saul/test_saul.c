@@ -1,6 +1,6 @@
 #include "test_saul.h"
 
-extern sensor_descriptor_t device_list[127];
+extern sensact_descriptor_t device_list[127];
 extern uint32_t i2c_devices[127];
 
 sensact_rw_result_t testFunc () {
@@ -29,8 +29,8 @@ int i;
 }
 
 _Bool testAddItem () {
-	sensor_descriptor_t sensor = (sensor_descriptor_t){testFunc, testFunc, "test",42,3};
-	sensor_descriptor_t sensor2 = (sensor_descriptor_t){testFunc, testFunc, "test",42,3};
+	sensact_descriptor_t sensor = (sensact_descriptor_t){testFunc, testFunc, "test",42,3};
+	sensact_descriptor_t sensor2 = (sensact_descriptor_t){testFunc, testFunc, "test",42,3};
 	sam_add_sensact(sensor);
 	sam_add_sensact(sensor2);
 	if (device_list[0].dev_id==42 && device_list[1].dev_id==42) {

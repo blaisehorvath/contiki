@@ -22,9 +22,11 @@ void bus_manager_clear_i2c_slave_data_int () {
 	(void)I2CSlaveDataGet(I2C0_BASE);
 }
 
-void bus_manager_r_sensact(sensor_descriptor_t* sensact, unsigned char i2c_addr, sensact_rw_result_t* result) {
+void bus_manager_r_sensact(uint32_t* device_addr, char* sensact_id, sensact_rw_result_t* result) {
 
-	unsigned char headerBuff[2] = {SENS_ACT_READ, sensact->sensor_id};
+	uint8_t i2c_addr = bus_manager_get_sensact_i2c_id(device_addr);
+
+	unsigned char headerBuff[2] = {SENS_ACT_READ, *sensact_id};
 	unsigned resultBuff[sizeof(double)];
 
 	board_i2c_select(BOARD_I2C_INTERFACE_0, i2c_addr);
@@ -33,10 +35,33 @@ void bus_manager_r_sensact(sensor_descriptor_t* sensact, unsigned char i2c_addr,
 	board_i2c_shutdown();
 }
 
-uint8_t bus_manager_get_sensact_i2c_id (sensor_descriptor_t* sensact) {
+void bus_manager_w_sensact(uint32_t* device_addr, char* sensact_addr, double* toWrite, sensact_rw_result_t* result) {
+
+	unsigned char i2c_addr = bus_manager_get_sensact_i2c_id(device_addr);
+
+	if (i2c_addr > 0 && i2c_addr <= I2C_BUS_ADDRESS_RANGE) {
+		unsigned char outBuff[2 + sizeof(double)];
+		outBuff[0] = SENS_ACT_WRITE;
+		outBuff[1] = *sensact_addr;
+		memcpy((char*) &outBuff[2], (char*) toWrite, 2+sizeof(double));
+
+		board_i2c_select(BOARD_I2C_INTERFACE_0, i2c_addr);
+		board_i2c_write(outBuff, 2 + sizeof(double));
+		board_i2c_shutdown();
+
+		result->data = 0;
+		result->err = NO_SENSACT_ERROR;
+	} else {
+		result->data = 0;
+		result->err = SENSACT_MISSING;
+	}
+
+}
+
+uint8_t bus_manager_get_sensact_i2c_id (uint32_t* device_id) {
 	unsigned char i;
 	for(i=1; i<I2C_BUS_ADDRESS_RANGE; i++) {
-		if(i2c_devices[i] == sensact->dev_id) return i;
+		if(i2c_devices[i] == *device_id) return i;
 	}
 	return 0x00;
 }

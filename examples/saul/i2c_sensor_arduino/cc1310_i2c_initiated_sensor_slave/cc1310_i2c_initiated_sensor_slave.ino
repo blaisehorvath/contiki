@@ -29,6 +29,7 @@ typedef struct sensact_descriptor_t {
 
 //TEMPORARY DUMMY VARIABLES
 byte SENS_NUM = 0x03;
+double double_answer = 1;
 sensact_descriptor_t sensors[] = {{"1_st_sensor", SENS_DOUBLE}, {"2_nd_sensor", SENS_DOUBLE}, {"3_rd_sensor", SENS_UINT32}};
 unsigned char device_addr[] = {0xde, 0xad, 0xbe, 0xef};
 
@@ -76,7 +77,7 @@ void receiveCb(int numBytes) {
   
   HEADER.action = Wire.read();
   
-  if(numBytes == 2) {
+  if(numBytes >= 2) {
     HEADER.specifier = Wire.read();
   }
   
@@ -95,6 +96,11 @@ void receiveCb(int numBytes) {
     case GET_SENSOR_TYPE:
 //      Serial.print("[STATE] -> GET_SENSOR_TYPE");
       STATE = GET_SENSOR_TYPE;
+      break;
+    
+    case SENS_ACT_WRITE:
+      Wire.write((char*)&double_answer, sizeof(double));
+    
       break;
     default:
 //      Serial.print("[ERROR] Invalid state receieved! -> ");

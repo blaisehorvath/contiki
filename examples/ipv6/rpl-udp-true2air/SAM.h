@@ -18,12 +18,12 @@ void sam_del_device(uint32_t dev_id);
  * has been connected to the bus
  * \param sensor The parameters of the sensor
  */
-void sam_add_sensact(sensor_descriptor_t sensor);
+void sam_add_sensact(sensact_descriptor_t sensor);
 
 //TODO: DOC
 void sam_read_sensact(uint32_t device_addr, char sensact_addr, sensact_rw_result_t* result);
 void sam_write_sensact(uint32_t device_addr, char sensact_addr, double data, sensact_rw_result_t* result);
 unsigned char sam_get_sensact_num();
-sensor_descriptor_t* sam_get_sensact_by_name(char* name);
+sensact_descriptor_t* sam_get_sensact_by_name(char* name);
 
 #endif /* EXAMPLES_IPV6_RPL_UDP_TRUE2AIR_SPGBZ_H_ */

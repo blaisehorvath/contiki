@@ -4,7 +4,7 @@
  *					Onboard sensors and actuators
  *--------------------------------------------------------------*/
 
-sensor_descriptor_t red_led = {
+sensact_descriptor_t red_led = {
 		read_red_led,
 		set_red_led,
 		"RED LED",
@@ -12,7 +12,7 @@ sensor_descriptor_t red_led = {
 		0x01
 };
 
-sensor_descriptor_t green_led = {
+sensact_descriptor_t green_led = {
 		read_green_led,
 		set_green_led,
 		"GREEN LED",
@@ -24,13 +24,13 @@ sensor_descriptor_t green_led = {
  *						Red led
  *--------------------------------------------------------------*/
 
-void set_red_led (uint32_t* dev_addr, char* sensact_id, double toWrite, sensact_rw_result_t* result) {
-	if (toWrite == 1) {
+void set_red_led (uint32_t* dev_addr, char* sensact_id, double* toWrite, sensact_rw_result_t* result) {
+	if (*toWrite == 1) {
 		leds_on(LEDS_RED);
 		result->data = 1;
 		result->err = NO_SENSACT_ERROR;
 	}
-	else if (toWrite == 0) {
+	else if (*toWrite == 0) {
 		leds_off(LEDS_RED);
 		result->data = 0;
 		result->err = NO_SENSACT_ERROR;
@@ -63,13 +63,13 @@ void read_red_led (uint32_t* dev_addr, char* sensact_id, sensact_rw_result_t* re
  *--------------------------------------------------------------*/
 
 
-void set_green_led (uint32_t* dev_addr, char* sensact_id, double toWrite, sensact_rw_result_t* result) {
-	if (toWrite == 1) {
+void set_green_led (uint32_t* dev_addr, char* sensact_id, double* toWrite, sensact_rw_result_t* result) {
+	if (*toWrite == 1) {
 		leds_on(LEDS_GREEN);
 		result->data = 1;
 		result->err = NO_SENSACT_ERROR;
 	}
-	else if (toWrite == 0) {
+	else if (*toWrite == 0) {
 		leds_off(LEDS_GREEN);
 		result->data = 0;
 		result->err = NO_SENSACT_ERROR;
