@@ -72,23 +72,31 @@
 static struct uip_udp_conn *client_conn;
 static uip_ipaddr_t server_ipaddr;
 
-//#############################################################################################
+
 #include "SAM.h"
 #include "tru2air_i2c_protocol.h"
 #include "cc1310_onboard_devices.h"
+#ifndef SIMULATED
 #include "bus_manager.h"
+#endif
+
 #include "project-conf.h"
 
-/* Globals */
 extern sensact_descriptor_t green_led, red_led;
+
+#ifndef SIMULATED
+/* Globals */
 extern volatile enum TRU2AIR_CLIENT_NODE_I2C_HANDLER_STATE STATE;
 unsigned char master_dev_id_buff[4];
 unsigned char rec_bytes = 4;
 extern volatile  tru2air_sensor_node_t DEVICE;
+#endif
 
 /*---------------------------------------------------------------------------*/
 PROCESS(udp_client_process, "UDP client process");
 AUTOSTART_PROCESSES(&udp_client_process);
+
+#ifndef SIMULATED
 /*---------------------------------------------------------------------------*/
 /*								tru2air i2c isr							     */
 /*---------------------------------------------------------------------------*/
@@ -124,6 +132,8 @@ void i2c_slave_data_isr () {
 	//TODO: make an else for error handling
 }
 /*---------------------------------------------------------------------------*/
+#endif
+
 static void tcpip_handler(void)
 {
   rfnode_pkt pkt_out;
@@ -215,17 +225,19 @@ set_global_address(void)
 PROCESS_THREAD(udp_client_process, ev, data)
 {
   static struct etimer periodic;
+#ifndef SIMULATED
   static struct etimer led_off;
+#endif
 
   PROCESS_BEGIN();
 
   PROCESS_PAUSE();
 
-
+#ifndef SIMULATED
   /* Bus manager stuff -------------------------------------------------------*/
   init_i2c_bus_manager();
   /*---------------------------------------------------------------------------*/
-
+#endif
 
   /* SAM stuff --------------------------------------------------------------*/
   sam_init();
@@ -239,7 +251,6 @@ PROCESS_THREAD(udp_client_process, ev, data)
 
   printf("board sensact num is %d \n", sam_get_sensact_num());
   /* SAM stuff end -----------------------------------------------------------*/
-
 
   set_global_address();
 
@@ -268,12 +279,13 @@ PROCESS_THREAD(udp_client_process, ev, data)
   etimer_set(&periodic, SEND_INTERVAL);
   printf("sizeof(rfnode_pkt:%d) \n",sizeof(rfnode_pkt));
   leds_arch_init();
+#ifndef SIMULATED
   etimer_set(&led_off, 50);
-
 
   bus_manager_register_i2c_isr(i2c_slave_data_isr);
   bus_manager_init_i2c_slave(0x10);
   printf("[INFO] i2c slave listen initiated\n");
+#endif
 
   printf("[STATUS] listening to UDP communication\n");
 
@@ -287,6 +299,7 @@ PROCESS_THREAD(udp_client_process, ev, data)
     	etimer_reset(&periodic);
     	send_init_packet(0);
     }
+#ifndef SIMULATED
     if(etimer_expired(&led_off)){
     	leds_toggle(LEDS_RED);
     	etimer_reset(&led_off);
@@ -294,6 +307,7 @@ PROCESS_THREAD(udp_client_process, ev, data)
     if(ev == PROCESS_EVENT_POLL) {
     	init_tru2air_sensor_node();
     }
+#endif
   }
 
   PROCESS_END();

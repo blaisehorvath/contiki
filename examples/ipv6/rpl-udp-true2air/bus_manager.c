@@ -1,3 +1,4 @@
+#ifndef SIMULATED
 #include "bus_manager.h"
 #include <stdio.h>
 #include <string.h>
@@ -390,3 +391,4 @@ static bool i2c_status()
 
   return status == I2C_MASTER_ERR_NONE;
 }
+#endif

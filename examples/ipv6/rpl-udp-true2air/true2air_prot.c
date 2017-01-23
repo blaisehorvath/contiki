@@ -5,7 +5,11 @@
  *      Author: v
  */
 #include "true2air_prot.h"
+
+#ifndef SIMULATED
 #include "bus_manager.h"
+#endif
+
 #include <stdio.h>
 #include <stdint.h>
 #include "net/ip/uip.h"

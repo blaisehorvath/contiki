@@ -10,6 +10,9 @@
 #include "bus_manager.h"
 #include "SAM.h"
 
+#ifndef SIMULATED
+
+
 /* Temporary Variables */
 extern void i2c_slave_data_isr (); //TODO: init_tru2air_snesor_node should require a function pointer to this instead of extern
 
@@ -141,3 +144,5 @@ void init_tru2air_sensor_node(){
 void init_sensact () {
 
 };
+
+#endif /* If simulated */

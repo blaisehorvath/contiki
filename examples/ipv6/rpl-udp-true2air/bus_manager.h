@@ -5,12 +5,15 @@
  *      Author: v
  */
 
+#ifndef SIMULATED
 #ifndef EXAMPLES_IPV6_RPL_UDP_TRUE2AIR_BUS_MANAGER_H_
 #define EXAMPLES_IPV6_RPL_UDP_TRUE2AIR_BUS_MANAGER_H_
 
 #include <stdint.h>
 #include <stdbool.h>
+#include "SAM.h"
 #include "ti-lib.h"
+
 #include "tru2air_i2c_protocol.h"
 
 // DEFINES
@@ -35,16 +38,7 @@ static bool i2c_status();
 void bus_manager_clear_i2c_slave_data_int();
 void bus_manager_register_i2c_isr (void (i2c_slave_data_isr)());
 
-/*!
- * sensor_descriptor_t is a structure which holds all the parameters needed to initialize a sensor
- */
-typedef struct sensact_descriptor_t {
-	void (*read) (uint32_t* device_addr, char* sensact_id, sensact_rw_result_t* result);
-	void (*write)(uint32_t* device_addr, char* sensact_addr, double* data, sensact_rw_result_t* result);
-	char name[23];
-	uint32_t dev_id;
-	uint8_t sensor_id;
-} sensact_descriptor_t;
+
 
 //TODO: doc
 void bus_manager_r_sensact(uint32_t* device_addr, char* sensact_id, sensact_rw_result_t* result);
@@ -166,3 +160,4 @@ void board_i2c_wakeup(void);
 void board_i2c_shutdown(void);
 
 #endif /* EXAMPLES_IPV6_RPL_UDP_TRUE2AIR_BUS_MANAGER_H_ */
+#endif /**/
