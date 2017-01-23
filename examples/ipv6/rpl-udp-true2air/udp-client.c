@@ -244,10 +244,11 @@ PROCESS_THREAD(udp_client_process, ev, data)
 
   sam_add_sensact(red_led);
   sam_add_sensact(green_led);
+  uint32_t toWrite = 1;
 
   sensact_rw_result_t led_result;
-  sam_write_sensact(ONBOARD_DEV_ADDR, 0x02, 1, &led_result);
-  sam_write_sensact(ONBOARD_DEV_ADDR, 0x01, 1, &led_result);
+  sam_write_sensact(&red_led, &toWrite, &led_result);
+  sam_write_sensact(&green_led, &toWrite, &led_result);
 
   printf("board sensact num is %d \n", sam_get_sensact_num());
   /* SAM stuff end -----------------------------------------------------------*/

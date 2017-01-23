@@ -112,16 +112,16 @@ void init_tru2air_sensor_node(){
 
 			case ( REGISTER_TO_SAM ):
 
-				printf("[STATE] -> REGISTER_TO_SAM\n");
-				sensact_descriptor_t new_sensact;
-
-				strcpy((char*)&(new_sensact.name),nameBuff);
-				new_sensact.dev_id = DEVICE.dev_addr;
-				new_sensact.sensor_id = currentSensor;
-				new_sensact.read = bus_manager_r_sensact;
-				new_sensact.write = bus_manager_w_sensact;
-
-				sam_add_sensact(new_sensact);
+//				printf("[STATE] -> REGISTER_TO_SAM\n");
+//				sensact_descriptor_t new_sensact;
+//
+//				strcpy((char*)&(new_sensact.name),nameBuff);
+//				new_sensact.dev_id = DEVICE.dev_addr;
+//				new_sensact.sensor_id = currentSensor;
+//				new_sensact.read = bus_manager_r_sensact;
+//				new_sensact.write = bus_manager_w_sensact;
+//
+//				sam_add_sensact(new_sensact);
 
 				if (++currentSensor == DEVICE.sensact_num) {
 					currentSensor = 0;

@@ -26,7 +26,7 @@
 
 /* Includes and globals by Blaise*/
 /* for SAM:*/
-extern sensact_descriptor_t device_list[];
+//extern sensact_descriptor_t device_list[];
 
 uint8_t node_initialized = 0;
 uint8_t slave_addr = 0x02;
@@ -37,6 +37,7 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 	print_pkt_without_addr(pkt_in);
 	pkt_out->pkt_cnt = pkt_in->pkt_cnt;
 	switch(pkt_in->msg){
+
 		case SET_IPADDR:
 			printf("SET IPADDR, init:%d\n",node_initialized);
 			pkt_out->msg = SET_IPADDR;// Don't answer
@@ -45,6 +46,8 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			sprintf(pkt_out->name,"REPLY SET_IPADDR!");
 			pkt_out->cnt = 2;
 			return 1;
+
+		/* Get the number of sensors actuators the tru2air node has*/
 		case GET_SENSACT_LIST:
 			pkt_out->msg = SENSACT_LIST_ACK;
 			pkt_out->data = 0;
@@ -52,27 +55,52 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			sprintf(pkt_out->name,"REPLY FROM NODE!");
 			pkt_out->cnt = sam_get_sensact_num();
 			return 1;
+
+		/* Senging the info of the pkt_in->cnt'th sensor's name */
 		case SENSACT_LIST_ITEM:
 			pkt_out->msg = SENSACT_LIST_ITEM;
 			pkt_out->data = 0;
 			pkt_out->new_device = 0;
 			pkt_out->cnt = pkt_in->cnt;
-			//TODO: possible security flaw, pkt_in->cnt could contai a number that is out of range of the devices list
-			if (device_list[pkt_in->cnt].dev_id != 0) sprintf(pkt_out->name, device_list[pkt_in->cnt].name);
+
+			if (pkt_in->cnt >= 0 && pkt_in->cnt < SAM_SENSACTS_MAX_NUM) sprintf(pkt_out->name, device_list[pkt_in->cnt].name);
 			else { pkt_out->msg = ERROR_PKT_MSG; }
 			return 1;
+
+		/* Send something mesured by the pkt_in'th sensor */
 		case GET_SENSACT: // Dummy sensor handler
+
 			pkt_out->msg = GET_SENSACT_ACK;
 			pkt_out->new_device = 0;
 			pkt_out->cnt = pkt_in->cnt;
-			if(pkt_in->cnt == 0 && !strcmp(pkt_in->name,"LED(RED)")){
-				sprintf(pkt_out->name,"LED(RED)");
-				pkt_out->data = (leds_get() &LEDS_RED) == 1; //WROOOOONG!!!!
+
+			sensact_rw_result_t result;
+
+			if( (pkt_in->cnt >= 0 && pkt_in->cnt < SAM_SENSACTS_MAX_NUM) && !strcmp(device_list[pkt_in->cnt].name, pkt_in->name)) { //This ordering of the check protects against buffer overflow and undefined behaviour too
+
+				device_list[pkt_in->cnt].read(&device_list[pkt_in->cnt], &result);
+
+				if(result.err == NO_SENSACT_ERROR) {
+					sprintf(pkt_out->name, device_list[pkt_in->cnt].name);
+					pkt_out->data = result.data;
+				}
+				else {
+					sprintf(pkt_out->name, "SENSACT ERROR"); //TODO: use my error types somehow
+				}
+
+			} else {
+//				result.err = SENSACT_MISSING;
+				sprintf(pkt_out->name, "SENSACT ERROR"); //TODO: same as above
 			}
-			else if(pkt_in->cnt == 1 && !strcmp(pkt_in->name,"LED(GREEN)")){
-				sprintf(pkt_out->name,"LED(GREEN)");
-				pkt_out->data = (leds_get() &LEDS_GREEN) == 1;// WROOONG
-			}
+
+//			if(pkt_in->cnt == 0 && !strcmp(pkt_in->name,"LED(RED)")){
+//				sprintf(pkt_out->name,"LED(RED)");
+//				pkt_out->data = (leds_get() &LEDS_RED) == 1; //WROOOOONG!!!!
+//			}
+//			else if(pkt_in->cnt == 1 && !strcmp(pkt_in->name,"LED(GREEN)")){
+//				sprintf(pkt_out->name,"LED(GREEN)");
+//				pkt_out->data = (leds_get() &LEDS_GREEN) == 1;// WROOONG
+//			}
 #ifdef WITH_BME280
 			else if(pkt_in->cnt == 2 && !strcmp(pkt_in->name,"TEMP")){
 				sprintf(pkt_out->name,"TEMP");
@@ -141,7 +169,6 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 				pkt_out->data =(uint32_t)(hum*1000);
 			}
 #endif
-			else sprintf(pkt_out->name,"WRONG NUMBER/NAME!");
 			return 1;
 
 			break;
