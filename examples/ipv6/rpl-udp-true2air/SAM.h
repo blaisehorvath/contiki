@@ -17,7 +17,7 @@ typedef struct sensact_descriptor_t {
 	void (*write)(struct sensact_descriptor_t* sensact, uint32_t* data, sensact_rw_result_t* result);
 	char name[23];
 	uint32_t dev_id;
-	uint8_t sensor_id;
+	uint8_t sensact_id;
 } sensact_descriptor_t;
 
 

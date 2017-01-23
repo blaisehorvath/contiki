@@ -43,7 +43,7 @@ typedef struct sensact_rw_result_t {
 
 enum SENSACT_COMM_ERR_T {
 	NO_SENSACT_ERROR, /* There was no error */
-	WRITE_VALIE_OUT_OF_RANGE, /* The write operation exceeded the sensors input range */
+	WRITE_VALUE_OUT_OF_RANGE, /* The write operation exceeded the sensors input range */
 	SENSACT_MISSING /* The adressed sensact is not there (or no longer there) */
 };
 

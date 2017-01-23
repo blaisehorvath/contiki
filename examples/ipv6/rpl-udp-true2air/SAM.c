@@ -18,7 +18,7 @@ void sam_del_device(uint32_t dev_id) {
 			device_list[i].dev_id = 0;
 			strcpy(device_list[i].name , "");
 			device_list[i].read = 0;
-			device_list[i].sensor_id = 0;
+			device_list[i].sensact_id = 0;
 			device_list[i].write = 0;
 		}
 	}
@@ -30,7 +30,7 @@ void sam_add_sensact(sensact_descriptor_t sensor) {
 		if (device_list[i].dev_id == 0) {
 			device_list[i].dev_id = sensor.dev_id;
 			strcpy(device_list[i].name, sensor.name); //TODO:possible error source, check length?
-			device_list[i].sensor_id = sensor.sensor_id;
+			device_list[i].sensact_id = sensor.sensact_id;
 			device_list[i].read = *(sensor.read);
 			device_list[i].write = *(sensor.write);
 			break;

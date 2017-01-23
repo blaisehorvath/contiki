@@ -22,7 +22,7 @@ void sam_del_device(uint32_t dev_id) {
 			device_list[i].dev_id = 0;
 			strcpy(device_list[i].name , "");
 			device_list[i].read = 0;
-			device_list[i].sensor_id = 0;
+			device_list[i].sensact_id = 0;
 			device_list[i].write = 0;
 		}
 	}
@@ -34,7 +34,7 @@ void sam_add_sensact(sensact_descriptor_t sensor) {
 		if (device_list[i].dev_id == 0) {
 			device_list[i].dev_id = sensor.dev_id;
 			strcpy(device_list[i].name, sensor.name); //TODO:possible error source, check length?
-			device_list[i].sensor_id = sensor.sensor_id;
+			device_list[i].sensact_id = sensor.sensact_id;
 			device_list[i].read = *(sensor.read);
 			device_list[i].write = *(sensor.write);
 			break;
@@ -46,7 +46,7 @@ void sam_read_sensact(uint32_t device_addr, char sensact_addr, sensact_rw_result
 	int i;
 	_Bool found;
 	for (i = 0; i < SAM_SENSACTS_MAX_NUM; i++) {
-		if(device_list[i].dev_id == device_addr && device_list[i].sensor_id == sensact_addr) {
+		if(device_list[i].dev_id == device_addr && device_list[i].sensact_id == sensact_addr) {
 			device_list[i].read(result);
 			found = 1;
 			break;
@@ -64,7 +64,7 @@ void sam_write_sensact(uint32_t device_addr, char sensact_addr, double data, sen
 	_Bool found;
 
 	for (i=0; i < SAM_SENSACTS_MAX_NUM; i++) {
-		if(device_list[i].dev_id == device_addr && device_list[i].sensor_id == sensact_addr) {
+		if(device_list[i].dev_id == device_addr && device_list[i].sensact_id == sensact_addr) {
 			device_list[i].write(data, result);
 			found = 1;
 			break;

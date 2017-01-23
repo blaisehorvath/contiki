@@ -82,9 +82,10 @@ static uip_ipaddr_t server_ipaddr;
 
 #include "project-conf.h"
 
-extern sensact_descriptor_t green_led, red_led;
+extern sensact_descriptor_t cc1310_green_led, cc1310_red_led;
 
 #ifndef SIMULATED
+extern sensact_descriptor_t cc1310_relay0, cc1310_relay1, cc1310_relay2, cc1310_relay3;
 /* Globals */
 extern volatile enum TRU2AIR_CLIENT_NODE_I2C_HANDLER_STATE STATE;
 unsigned char master_dev_id_buff[4];
@@ -242,15 +243,27 @@ PROCESS_THREAD(udp_client_process, ev, data)
   /* SAM stuff --------------------------------------------------------------*/
   sam_init();
 
-  sam_add_sensact(red_led);
-  sam_add_sensact(green_led);
+  /* Leds */
+  sam_add_sensact(cc1310_red_led);
+  sam_add_sensact(cc1310_green_led);
   uint32_t toWrite = 1;
 
   sensact_rw_result_t led_result;
-  sam_write_sensact(&red_led, &toWrite, &led_result);
-  sam_write_sensact(&green_led, &toWrite, &led_result);
+  sam_write_sensact(&cc1310_red_led, &toWrite, &led_result);
+  sam_write_sensact(&cc1310_green_led, &toWrite, &led_result);
 
-  printf("board sensact num is %d \n", sam_get_sensact_num());
+  /* Relays */
+  sam_add_sensact(cc1310_relay1);
+  sam_write_sensact(&cc1310_relay1, &toWrite, &led_result);
+  printf("[RELAY] relay write error: %d\n", led_result.err);
+
+  sam_read_sensact(&cc1310_relay1, &led_result);
+  printf("[RELAY] relay read error: %d result: %d \n", led_result.err, led_result.data);
+
+  sam_read_sensact(&cc1310_relay1, &led_result);
+  printf("[RELAY] relay read error: %d result: %d \n", led_result.err, led_result.data);
+
+  printf("[SAM] board sensact num is %d \n", sam_get_sensact_num());
   /* SAM stuff end -----------------------------------------------------------*/
 
   set_global_address();
