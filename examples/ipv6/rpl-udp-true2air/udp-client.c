@@ -243,27 +243,33 @@ PROCESS_THREAD(udp_client_process, ev, data)
   /* SAM stuff --------------------------------------------------------------*/
   sam_init();
 
+
   /* Leds */
+  leds_arch_init();
+  leds_off(LEDS_RED && LEDS_GREEN);
   sam_add_sensact(cc1310_red_led);
   sam_add_sensact(cc1310_green_led);
   uint32_t toWrite = 1;
 
   sensact_rw_result_t led_result;
-  sam_write_sensact(&cc1310_red_led, &toWrite, &led_result);
-  sam_write_sensact(&cc1310_green_led, &toWrite, &led_result);
+//  sam_write_sensact(&cc1310_red_led, &toWrite, &led_result);
+//  sam_write_sensact(&cc1310_green_led, &toWrite, &led_result);
 
+#ifndef SIMULATED
   /* Relays */
   sam_add_sensact(cc1310_relay1);
-  sam_write_sensact(&cc1310_relay1, &toWrite, &led_result);
-  printf("[RELAY] relay write error: %d\n", led_result.err);
-
-  sam_read_sensact(&cc1310_relay1, &led_result);
-  printf("[RELAY] relay read error: %d result: %d \n", led_result.err, led_result.data);
-
-  sam_read_sensact(&cc1310_relay1, &led_result);
-  printf("[RELAY] relay read error: %d result: %d \n", led_result.err, led_result.data);
+//  sam_write_sensact(&cc1310_relay1, &toWrite, &led_result);
+//  printf("[RELAY] relay write error: %d\n", led_result.err);
+//
+//  sam_read_sensact(&cc1310_relay1, &led_result);
+//  printf("[RELAY] relay read error: %d result: %d \n", led_result.err, led_result.data);
+//
+//  sam_read_sensact(&cc1310_relay1, &led_result);
+//  printf("[RELAY] relay read error: %d result: %d \n", led_result.err, led_result.data);
 
   printf("[SAM] board sensact num is %d \n", sam_get_sensact_num());
+#endif
+
   /* SAM stuff end -----------------------------------------------------------*/
 
   set_global_address();
@@ -292,9 +298,8 @@ PROCESS_THREAD(udp_client_process, ev, data)
 
   etimer_set(&periodic, SEND_INTERVAL);
   printf("sizeof(rfnode_pkt:%d) \n",sizeof(rfnode_pkt));
-  leds_arch_init();
 #ifndef SIMULATED
-  etimer_set(&led_off, 50);
+//  etimer_set(&led_off, 50);
 
   bus_manager_register_i2c_isr(i2c_slave_data_isr);
   bus_manager_init_i2c_slave(0x10);
@@ -314,10 +319,10 @@ PROCESS_THREAD(udp_client_process, ev, data)
     	send_init_packet(0);
     }
 #ifndef SIMULATED
-    if(etimer_expired(&led_off)){
-    	leds_toggle(LEDS_RED);
-    	etimer_reset(&led_off);
-    }
+//    if(etimer_expired(&led_off)){
+//    	leds_toggle(LEDS_RED);
+//    	etimer_reset(&led_off);
+//    }
     if(ev == PROCESS_EVENT_POLL) {
     	init_tru2air_sensor_node();
     }

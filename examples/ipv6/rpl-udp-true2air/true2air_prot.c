@@ -17,7 +17,6 @@
 
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
-#include "dev/leds.h"
 
 #ifndef SIMULATED
 #endif
@@ -32,7 +31,6 @@ uint8_t node_initialized = 0;
 uint8_t slave_addr = 0x02;
 int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 {
-	leds_on(LEDS_BLUE);
 	node_initialized = 1;
 	print_pkt_without_addr(pkt_in);
 	pkt_out->pkt_cnt = pkt_in->pkt_cnt;
@@ -89,18 +87,9 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 				}
 
 			} else {
-//				result.err = SENSACT_MISSING;
 				sprintf(pkt_out->name, "SENSACT ERROR"); //TODO: same as above
 			}
 
-//			if(pkt_in->cnt == 0 && !strcmp(pkt_in->name,"LED(RED)")){
-//				sprintf(pkt_out->name,"LED(RED)");
-//				pkt_out->data = (leds_get() &LEDS_RED) == 1; //WROOOOONG!!!!
-//			}
-//			else if(pkt_in->cnt == 1 && !strcmp(pkt_in->name,"LED(GREEN)")){
-//				sprintf(pkt_out->name,"LED(GREEN)");
-//				pkt_out->data = (leds_get() &LEDS_GREEN) == 1;// WROOONG
-//			}
 #ifdef WITH_BME280
 			else if(pkt_in->cnt == 2 && !strcmp(pkt_in->name,"TEMP")){
 				sprintf(pkt_out->name,"TEMP");
@@ -172,21 +161,30 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			return 1;
 
 			break;
-		case SET_SENSACT: // Dummy sensor handler
+
+		case SET_SENSACT:
+
 			pkt_out->msg = SET_SENSACT_ACK;
-			pkt_out->data = pkt_in->data;
 			pkt_out->new_device = 0;
 			pkt_out->cnt = pkt_in->cnt;
-			if(pkt_in->cnt == 0 && !strcmp(pkt_in->name,"LED(RED)")){
-				sprintf(pkt_out->name,"LED(RED)");
-				pkt_in->data?leds_on(LEDS_RED):leds_off(LEDS_RED);
+
+			if( (pkt_in->cnt >= 0 && pkt_in->cnt < SAM_SENSACTS_MAX_NUM) && !strcmp(device_list[pkt_in->cnt].name, pkt_in->name)) { //This ordering of the check protects against buffer overflow and undefined behaviour too
+
+				sensact_rw_result_t result;
+
+				device_list[pkt_in->cnt].write(&device_list[pkt_in->cnt], &(pkt_in->data), &result);
+				if (result.err == NO_SENSACT_ERROR) pkt_out->data = pkt_in->data; //TODO: possible bug source
+				else {
+					sprintf(pkt_out->name, "SENSACT ERROR"); //TODO: error handling
+					pkt_out->data = pkt_in->data;
+				}
+			} else {
+				sprintf(pkt_out->name, "SENSACT ERROR");
+				pkt_out->data = pkt_in->data;
 			}
-			else if(pkt_in->cnt == 1 && !strcmp(pkt_in->name,"LED(GREEN)")){
-				sprintf(pkt_out->name,"LED(GREEN)");
-				pkt_in->data?leds_on(LEDS_GREEN):leds_off(LEDS_GREEN);
-			}
-			else sprintf(pkt_out->name,"WRONG NUMBER/NAME!");
+
 			return 1;
+
 		case SENSACT_ACK:
 		case SENSACT_LIST_ACK:
 		case ERROR_PKT_MSG:

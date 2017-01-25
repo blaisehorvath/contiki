@@ -120,6 +120,7 @@ void write_relay(sensact_descriptor_t* sensact, uint32_t* setValue, sensact_rw_r
  *--------------------------------------------------------------*/
 
 void set_red_led (sensact_descriptor_t* sensor, uint32_t* toWrite, sensact_rw_result_t* result) {
+
 	if (*toWrite == 1) {
 		leds_on(LEDS_RED);
 		result->data = 1;
@@ -134,6 +135,7 @@ void set_red_led (sensact_descriptor_t* sensor, uint32_t* toWrite, sensact_rw_re
 		result->data = 0;
 		result->err = WRITE_VALUE_OUT_OF_RANGE;
 	}
+	printf("[SET RED LED] %d\n", result->data);
 }
 
 void read_red_led (sensact_descriptor_t* sensact, sensact_rw_result_t* result) {
@@ -150,6 +152,7 @@ void read_red_led (sensact_descriptor_t* sensact, sensact_rw_result_t* result) {
 		result->data = 0;
 		result->err = NO_SENSACT_ERROR;
 	}
+	printf("[READ RED LED] %d\n", result->data);
 }
 
 
@@ -173,6 +176,7 @@ void set_green_led (sensact_descriptor_t* sensor, uint32_t* toWrite, sensact_rw_
 		result->data = 0;
 		result->err = WRITE_VALUE_OUT_OF_RANGE;
 	}
+	printf("[SET GREEN LED] %d\n", result->data);
 }
 
 void read_green_led (sensact_descriptor_t* sensact, sensact_rw_result_t* result) {
@@ -189,4 +193,5 @@ void read_green_led (sensact_descriptor_t* sensact, sensact_rw_result_t* result)
 		result->data = 0;
 		result->err = NO_SENSACT_ERROR;
 	}
+	printf("[READ GREEN LED] %d\n", result->data);
 }
