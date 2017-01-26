@@ -37,12 +37,9 @@ static bool accessible(void);
 static bool i2c_status();
 void bus_manager_clear_i2c_slave_data_int();
 void bus_manager_register_i2c_isr (void (i2c_slave_data_isr)());
+void bus_manager_w_sensact(sensact_descriptor_t* sensact, unsigned int* toWrite, sensact_rw_result_t* result);
+void bus_manager_r_sensact(sensact_descriptor_t* sensact, sensact_rw_result_t* result);
 
-
-
-//TODO: doc
-//void bus_manager_r_sensact(uint32_t* device_addr, char* sensact_id, sensact_rw_result_t* result);
-//void bus_manager_w_sensact(uint32_t* device_addr, char* sensact_addr, double* toWrite, sensact_rw_result_t* result);
 
 /**
  * This function initializes the bus manager.

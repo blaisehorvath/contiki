@@ -1,3 +1,18 @@
+#include <SPI.h>
+#include <Adafruit_Sensor.h>
+#include <Adafruit_BME280.h>
+
+#define BME_SCK 13
+#define BME_MISO 12
+#define BME_MOSI 11
+#define BME_CS 10
+#define SEALEVELPRESSURE_HPA (1013.25)
+
+Adafruit_BME280 bme(BME_CS, BME_MOSI, BME_MISO,  BME_SCK);
+
+/****************************/
+//         Tru2Air Stuff
+/****************************/
 #include <Wire.h>
 
 //STATES
@@ -8,8 +23,7 @@ enum I2C_COMM_PROT_ACTION {GET_SENSACT_NUM, GET_SENSOR_NAME, GET_SENSOR_TYPE, SE
 // Sensor return types
 enum TRU2AIR_SENSOR_DATA_TYPE {SENS_DOUBLE, SENS_UINT32 };
 
-
-
+// DEVICE STATE
 byte STATE = GET_SENSACT_NUM;
 
 unsigned char I2C_SLAVE_ADDRESS = 0;
@@ -29,8 +43,8 @@ typedef struct sensact_descriptor_t {
 
 //TEMPORARY DUMMY VARIABLES
 byte SENS_NUM = 0x03;
-double double_answer = 1;
-sensact_descriptor_t sensors[] = {{"1_st_sensor", SENS_DOUBLE}, {"2_nd_sensor", SENS_DOUBLE}, {"3_rd_sensor", SENS_UINT32}};
+unsigned int uint32_answer = 15;
+sensact_descriptor_t sensors[] = {{"BME280_PRESSURE", SENS_UINT32}, {"BME280_TEMP", SENS_UINT32}, {"BME280_HUM", SENS_UINT32}};
 unsigned char device_addr[] = {0xde, 0xad, 0xbe, 0xef};
 
 
@@ -39,6 +53,14 @@ void setup() {
   
   Wire.begin(); // join i2c bus (address optional for master)
   
+  //initiating the BME driver
+
+  if (!bme.begin()) {
+    Serial.println("Could not find a valid BME280 sensor, check wiring!");
+    while (1);
+  }
+  
+  // Starting the tru2air i2c protocol
   Wire.beginTransmission(0x10); // transmit to device #8
   Wire.write(0xde);      
   Wire.write(0xad);      
@@ -46,8 +68,6 @@ void setup() {
   Wire.write(0xef);     
   Wire.endTransmission(false);    // stop transmitting
   Wire.requestFrom(0x10, 1,false);    // request 6 bytes from slave device #8 
-
-  
 
   
   while (Wire.available()) { // slave may send less than requested
@@ -99,9 +119,11 @@ void receiveCb(int numBytes) {
       break;
     
     case SENS_ACT_WRITE:
-      Wire.write((char*)&double_answer, sizeof(double));
+      Wire.write(0x17);//uint32_answer);
     
       break;
+    case SENS_ACT_READ:
+      STATE = SENS_ACT_READ;
     default:
 //      Serial.print("[ERROR] Invalid state receieved! -> ");
       break;
@@ -112,10 +134,8 @@ void receiveCb(int numBytes) {
 void requestCb() {
 //  Serial.print("[REQUEST]\n");
   bool endOfMsg = false;
-  double dummyMsg = 1;
 
   //TODO:remove this
-  double ans = 0;
 
   switch(STATE) {
     case GET_SENSACT_NUM:
@@ -131,12 +151,34 @@ void requestCb() {
       break;
       
     case GET_SENSOR_TYPE:
-      Serial.print(sizeof(sensors[HEADER.specifier].type));
+      //Serial.print(sizeof(sensors[HEADER.specifier].type));
       Wire.write(sensors[HEADER.specifier].type);
       break;
 
     case SENS_ACT_READ:
-      Wire.write((char*)&dummyMsg, sizeof(double));
+      switch(HEADER.specifier) {
+        //pressure
+        case 0:
+          unsigned int p;
+          p = bme.readPressure()*100; //10e-2 C
+          Wire.write((char*)&p, 4);
+          break;
+        //temp
+        case 1:
+          unsigned int temp;
+          temp = bme.readTemperature() * 100; //Pa
+          Wire.write((char*)&temp,4);
+          break;
+        //hum
+        case 2:
+          unsigned int hum;
+          hum = bme.readHumidity() * 100; //ezrelék
+          Wire.write((char*)&hum, 4);
+          break;
+        default:
+          ;
+      }
+      
       break;      
 
     default:

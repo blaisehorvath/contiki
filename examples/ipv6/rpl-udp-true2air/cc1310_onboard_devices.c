@@ -77,8 +77,10 @@ void read_relay(sensact_descriptor_t* sensact, sensact_rw_result_t* result){
 		return;
 	}
 
-	IOCPinTypeGpioInput(RELAY_PINS[sensact->sensact_id]);
-	result->data = GPIO_readDio(RELAY_PINS[sensact->sensact_id]);
+//	IOCPinTypeGpioInput(RELAY_PINS[sensact->sensact_id]);
+//	result->data = GPIO_readDio(RELAY_PINS[sensact->sensact_id]);
+	result->data = (unsigned int) *( (unsigned int*) ( GPIO_BASE +  RELAY_PINS[sensact->sensact_id]) );
+	printf("[GPIO READ] %d \n", result->data);
 	result->err = NO_SENSACT_ERROR;
 }
 
@@ -101,7 +103,7 @@ void write_relay(sensact_descriptor_t* sensact, uint32_t* setValue, sensact_rw_r
 		return;
 	}
 
-	if (*setValue != 0 && *setValue !=1 && setValue != NULL) {
+	if ((*setValue != 0 && *setValue !=1) || setValue == NULL) {
 		result->data = 0;
 		result->err = WRITE_VALUE_OUT_OF_RANGE;
 		return;
