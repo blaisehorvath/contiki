@@ -161,7 +161,7 @@ send_init_packet(void *ptr)
 #ifdef SIMULATED
   for ( i = 0; i < 22 ; i++) pkt.name[i] = 0;
 #else
-  for ( i = 0; i < 23 ; i++) pkt.name[i] = 0;
+  for ( i = 0; i < 22 ; i++) pkt.name[i] = 0;
 #endif
   sprintf(pkt.name, "SETIPADDRMSG");
   PRINTF("ZEROED\n");

@@ -32,6 +32,7 @@ uint8_t slave_addr = 0x02;
 int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 {
 	node_initialized = 1;
+	sensact_rw_result_t result;
 	print_pkt_without_addr(pkt_in);
 	pkt_out->pkt_cnt = pkt_in->pkt_cnt;
 	switch(pkt_in->msg){
@@ -43,6 +44,7 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			pkt_out->new_device = node_initialized;
 			sprintf(pkt_out->name,"REPLY SET_IPADDR!");
 			pkt_out->cnt = 2;
+			pkt_out->error = NO_SENSACT_ERROR;
 			return 1;
 
 		/* Get the number of sensors actuators the tru2air node has*/
@@ -52,6 +54,7 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			pkt_out->new_device = 0;
 			sprintf(pkt_out->name,"REPLY FROM NODE!");
 			pkt_out->cnt = sam_get_sensact_num();
+			pkt_out->error = NO_SENSACT_ERROR;
 			return 1;
 
 		/* Senging the info of the pkt_in->cnt'th sensor's name */
@@ -61,8 +64,9 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			pkt_out->new_device = 0;
 			pkt_out->cnt = pkt_in->cnt;
 
+			//TODO: handle SENSACT MISSING
 			if (pkt_in->cnt >= 0 && pkt_in->cnt < SAM_SENSACTS_MAX_NUM) sprintf(pkt_out->name, device_list[pkt_in->cnt].name);
-			else { pkt_out->msg = ERROR_PKT_MSG; }
+			else { pkt_out->error = INVALID_SAM_ADDR; }
 			return 1;
 
 		/* Send something mesured by the pkt_in'th sensor */
@@ -72,23 +76,26 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			pkt_out->new_device = 0;
 			pkt_out->cnt = pkt_in->cnt;
 
-			sensact_rw_result_t result;
 
-			if( (pkt_in->cnt >= 0 && pkt_in->cnt < SAM_SENSACTS_MAX_NUM) && !strcmp(device_list[pkt_in->cnt].name, pkt_in->name)) { //This ordering of the check protects against buffer overflow and undefined behaviour too
-
-				device_list[pkt_in->cnt].read(&device_list[pkt_in->cnt], &result);
-
-				if(result.err == NO_SENSACT_ERROR) {
-					sprintf(pkt_out->name, device_list[pkt_in->cnt].name);
-					pkt_out->data = result.data;
-				}
-				else {
-					sprintf(pkt_out->name, "SENSACT ERROR"); //TODO: use my error types somehow
-				}
-
-			} else {
-				sprintf(pkt_out->name, "SENSACT ERROR"); //TODO: same as above
+			if (pkt_in->cnt < 0 && pkt_in->cnt > SAM_SENSACTS_MAX_NUM)  {
+				pkt_out->error = INVALID_SAM_ADDR;
+				return 1;
 			}
+			if (strcmp(device_list[pkt_in->cnt].name, pkt_in->name)) {
+				pkt_out->error = SENSACT_MISSING;
+				return 1;
+			}
+
+			device_list[pkt_in->cnt].read(&device_list[pkt_in->cnt], &result);
+
+			if(result.err == NO_SENSACT_ERROR) {
+				sprintf(pkt_out->name, device_list[pkt_in->cnt].name);
+				pkt_out->data = result.data;
+			}
+			else {
+				pkt_out->error = result.err;
+			}
+
 
 #ifdef WITH_BME280
 			else if(pkt_in->cnt == 2 && !strcmp(pkt_in->name,"TEMP")){
@@ -167,19 +174,23 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			pkt_out->msg = SET_SENSACT_ACK;
 			pkt_out->new_device = 0;
 			pkt_out->cnt = pkt_in->cnt;
+			pkt_out->data = pkt_in->data;
 
-			if( (pkt_in->cnt >= 0 && pkt_in->cnt < SAM_SENSACTS_MAX_NUM) && !strcmp(device_list[pkt_in->cnt].name, pkt_in->name)) { //This ordering of the check protects against buffer overflow and undefined behaviour too
+			if(pkt_in->cnt < 0 || pkt_in->cnt > SAM_SENSACTS_MAX_NUM) {
+				pkt_out->error = INVALID_SAM_ADDR;
+				return 1;
+			}
 
-				sensact_rw_result_t result;
+			if(strcmp(device_list[pkt_in->cnt].name, pkt_in->name)) { //This ordering of the check protects against buffer overflow and undefined behaviour too
+				pkt_out->error = SENSACT_MISSING;
+				return 1;
+			}
 
-				device_list[pkt_in->cnt].write(&device_list[pkt_in->cnt], &(pkt_in->data), &result);
-				if (result.err == NO_SENSACT_ERROR) pkt_out->data = pkt_in->data; //TODO: possible bug source
-				else {
-					sprintf(pkt_out->name, "SENSACT ERROR"); //TODO: error handling
-					pkt_out->data = pkt_in->data;
-				}
-			} else {
-				sprintf(pkt_out->name, "SENSACT ERROR");
+			device_list[pkt_in->cnt].write(&device_list[pkt_in->cnt], &(pkt_in->data), &result);
+
+			if (result.err == NO_SENSACT_ERROR) pkt_out->data = pkt_in->data; //TODO: possible bug source
+			else {
+				sprintf(pkt_out->name, "SENSACT ERROR"); //TODO: error handling
 				pkt_out->data = pkt_in->data;
 			}
 

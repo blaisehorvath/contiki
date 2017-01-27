@@ -43,6 +43,13 @@
 #include "true2air_prot.h"
 #include "dev/leds.h"
 
+/* FOR XDS100 FLASHING */
+#define ROM_BOOTLOADER_ENABLE                 1
+#define BOOTLOADER_ENABLE = 0xC5
+#define BL_LEVEL = 0x00
+#define BL_PIN_NUMBER = 0x0B
+#define BL_ENABLE = 0xC5
+
 #define DEBUG DEBUG_PRINT
 #include "net/ip/uip-debug.h"
 

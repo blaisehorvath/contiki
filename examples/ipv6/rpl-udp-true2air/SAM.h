@@ -14,11 +14,14 @@ enum TRU2AIR_SENSOR_DATA_TYPE {
 };
 
 enum SENSACT_COMM_ERR_T {
+	/* SENSACT COMM ERRORS */
 	NO_SENSACT_ERROR, /* There was no error */
 	WRITE_VALUE_OUT_OF_RANGE, /* The write operation exceeded the sensors input range */
-	SENSACT_MISSING, /* The adressed sensact is not there (or no longer there) */
+	SENSACT_MISSING, /* The addressed sensact is not there (or no longer there) */
 	INVALID_DEVICE_ADDR, /* The given device address is invalid */
-	INVALID_SENSACT_ID /* The device is connected but the addressed there is no SENSACT with the given SENSACT_ID */
+	INVALID_SENSACT_ID, /* The device is connected but the addressed there is no SENSACT with the given SENSACT_ID */
+	/* SAM ERRORS */
+	INVALID_SAM_ADDR, /* The given number is not a valid SAM index */
 };
 
 /*! sensact_rw_result_t describes a data type which is interchanged in tru2air communication protocols.

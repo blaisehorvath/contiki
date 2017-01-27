@@ -51,9 +51,10 @@ typedef struct {
 #ifdef SIMULATED
 	char name[22];
 #else
-	char name[23];
+	char name[22];
 #endif
 	uint8_t new_device; /**< New sensor on the node side if true, request of a GET_SENSACT_LIST */
+	uint8_t error;
 } rfnode_pkt; //TODO: Proper alignment
 
 int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out);
