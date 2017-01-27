@@ -5,7 +5,7 @@
 
 #define I2C_BUS_ADDRESS_RANGE 127
 
-static uint8_t slave_addr = 0x07;
+static uint8_t slave_addr;
 static uint8_t interface = NO_INTERFACE;
 
 void init_i2c_bus_manager () {

@@ -1,6 +1,5 @@
 #include "dev/leds.h"
 #include "SAM.h"
-#include "tru2air_i2c_protocol.h"
 
 
 #define TRU2AIR_CLIENT_ONBOARD_LEDS 1

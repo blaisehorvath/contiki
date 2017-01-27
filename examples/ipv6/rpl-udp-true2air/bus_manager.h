@@ -14,7 +14,6 @@
 #include "SAM.h"
 #include "ti-lib.h"
 
-#include "tru2air_i2c_protocol.h"
 
 // DEFINES
 #define NO_INTERFACE 0xFF

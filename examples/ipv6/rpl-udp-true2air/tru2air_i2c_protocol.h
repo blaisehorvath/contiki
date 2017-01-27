@@ -25,18 +25,6 @@ enum TRU2AIR_CLIENT_NODE_I2C_HANDLER_STATE {
 	REGISTER_TO_SAM
 };
 
-enum TRU2AIR_SENSOR_DATA_TYPE {
-	SENS_DOUBLE,
-	SENS_UINT32
-};
-
-enum SENSACT_COMM_ERR_T {
-	NO_SENSACT_ERROR, /* There was no error */
-	WRITE_VALUE_OUT_OF_RANGE, /* The write operation exceeded the sensors input range */
-	SENSACT_MISSING, /* The adressed sensact is not there (or no longer there) */
-	INVALID_DEVICE_ADDR, /* The given device address is invalid */
-	INVALID_SENSACT_ID /* The device is connected but the addressed there is no SENSACT with the given SENSACT_ID */
-};
 
 /**
  * A stuct that hold an action (see I2C_COMM_PROT_ACTION and e specifier.
@@ -55,16 +43,6 @@ typedef struct tru2air_sensor_node_t {
     unsigned char i2c_addr;
     unsigned char sensact_num;
 } tru2air_sensor_node_t;
-
-/*! bus_comm_t describes a data type which is returned both from the
- * i2c bus and to the SAM as a data value from a sensor
- * err is the flag which is true if some kind of error occured during the transmission
- * data is the data returned
- */
-typedef struct sensact_rw_result_t {
-	unsigned char err;
-	unsigned int data;
-} sensact_rw_result_t;
 
 #ifndef SIMULATED
 /*
