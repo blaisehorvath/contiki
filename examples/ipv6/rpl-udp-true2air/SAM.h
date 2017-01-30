@@ -8,6 +8,10 @@
 /* Defines */
 #define SAM_SENSACTS_MAX_NUM 127
 
+/* Enums */
+/*!
+ * The type that the sensor returns
+ */
 enum TRU2AIR_SENSOR_DATA_TYPE {
 	SENS_DOUBLE,
 	SENS_UINT32
