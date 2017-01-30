@@ -13,8 +13,9 @@
  * The type that the sensor returns
  */
 enum TRU2AIR_SENSOR_DATA_TYPE {
+	SENS_UINT32,
 	SENS_DOUBLE,
-	SENS_UINT32
+	SENS_MAX_RANGE=65535
 };
 
 enum SENSACT_COMM_ERR_T {
@@ -44,9 +45,10 @@ typedef struct sensact_rw_result_t {
 typedef struct sensact_descriptor_t {
 	void (*read) (struct sensact_descriptor_t* sensact, sensact_rw_result_t* result);
 	void (*write)(struct sensact_descriptor_t* sensact, uint32_t* data, sensact_rw_result_t* result);
-	char name[23];
 	uint32_t dev_id;
+	char name[23];
 	uint8_t sensact_id;
+	uint16_t sensact_return_type;
 } sensact_descriptor_t;
 
 

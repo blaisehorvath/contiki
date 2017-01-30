@@ -21,7 +21,7 @@ enum I2C_COMM_PROT_ACTION {GET_SENSACT_NUM, GET_SENSOR_NAME, GET_SENSOR_TYPE, SE
 
 
 // Sensor return types
-enum TRU2AIR_SENSOR_DATA_TYPE {SENS_DOUBLE, SENS_UINT32 };
+enum TRU2AIR_SENSOR_DATA_TYPE {SENS_UINT32, SENS_DOUBLE, SENS_MAX_RANGE=65535};
 
 // DEVICE STATE
 byte STATE = GET_SENSACT_NUM;
@@ -37,14 +37,14 @@ tru2air_header_t HEADER = {0xff,0xff};
 
 typedef struct sensact_descriptor_t {
   unsigned char name [24];
-  unsigned char type;
+  uint16_t type;
 } sensact_descriptor_t;
 
 
 //TEMPORARY DUMMY VARIABLES
 byte SENS_NUM = 0x03;
 unsigned int uint32_answer = 15;
-sensact_descriptor_t sensors[] = {{"BME280_PRESSURE", SENS_UINT32}, {"BME280_TEMP", SENS_UINT32}, {"BME280_HUM", SENS_UINT32}};
+sensact_descriptor_t sensors[] = {{"BME280_PRESSURE", SENS_UINT32}, {"BME280_TEMP", SENS_UINT32}, {"BME280_HUM", SENS_DOUBLE}};
 unsigned char device_addr[] = {0xde, 0xad, 0xbe, 0xef};
 
 
@@ -152,7 +152,7 @@ void requestCb() {
       
     case GET_SENSOR_TYPE:
       //Serial.print(sizeof(sensors[HEADER.specifier].type));
-      Wire.write(sensors[HEADER.specifier].type);
+      Wire.write((char*)(&sensors[HEADER.specifier].type),2);
       break;
 
     case SENS_ACT_READ:

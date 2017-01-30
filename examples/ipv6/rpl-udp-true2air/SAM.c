@@ -6,7 +6,7 @@
 void sam_init() {
 	int i;
 	for (i = 0; i<SAM_SENSACTS_MAX_NUM; i++) {
-		device_list[i] = (sensact_descriptor_t){0,0,"",0,0};
+		device_list[i] = (sensact_descriptor_t){0,0,"",0,0,0};
 	}
 }
 
@@ -20,6 +20,7 @@ void sam_del_device(uint32_t dev_id) {
 			device_list[i].read = 0;
 			device_list[i].sensact_id = 0;
 			device_list[i].write = 0;
+			device_list[i].sensact_return_type =  0;
 		}
 	}
 }
@@ -33,6 +34,7 @@ void sam_add_sensact(sensact_descriptor_t sensor) {
 			device_list[i].sensact_id = sensor.sensact_id;
 			device_list[i].read = *(sensor.read);
 			device_list[i].write = *(sensor.write);
+			device_list[i].sensact_return_type = sensor.sensact_return_type;
 			break;
 		}
 	}
