@@ -96,77 +96,7 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 				pkt_out->error = result.err;
 			}
 
-
-#ifdef WITH_BME280
-			else if(pkt_in->cnt == 2 && !strcmp(pkt_in->name,"TEMP")){
-				sprintf(pkt_out->name,"TEMP");
-				  board_i2c_select(0,slave_addr);
-
-				  uint8_t data[24];
-
-
-				  board_i2c_read(&data[0],24);
-				  board_i2c_shutdown();
-
-
-				  double temp = 0;
-				  double pres = 0;
-				  double hum = 0;
-				  int i = 0;
-				  for (i = 0; i<8; i++) {
-					  *(((char*)&temp)+i)=data[i];
-					  *(((char*)&pres)+i)=data[i+8];
-					  *(((char*)&hum)+i)=data[i+16];
-				  }
-				pkt_out->data = (uint32_t)(temp*1000);
-			}
-			else if(pkt_in->cnt == 3 && !strcmp(pkt_in->name,"PRESS")){
-				sprintf(pkt_out->name,"PRESS");
-				  board_i2c_select(0,slave_addr);
-
-				  uint8_t data[24];
-
-
-				  board_i2c_read(&data[0],24);
-				  board_i2c_shutdown();
-
-
-				  double temp = 0;
-				  double pres = 0;
-				  double hum = 0;
-				  int i = 0;
-				  for (i = 0; i<8; i++) {
-					  *(((char*)&temp)+i)=data[i];
-					  *(((char*)&pres)+i)=data[i+8];
-					  *(((char*)&hum)+i)=data[i+16];
-				  }
-				pkt_out->data = (uint32_t)(pres*1);
-			}
-			else if(pkt_in->cnt == 4 && !strcmp(pkt_in->name,"HUMIDITY")){
-				sprintf(pkt_out->name,"HUMIDITY");
-				  board_i2c_select(0,slave_addr);
-
-				  uint8_t data[24];
-
-
-				  board_i2c_read(&data[0],24);
-				  board_i2c_shutdown();
-
-
-				  double temp = 0;
-				  double pres = 0;
-				  double hum = 0;
-				  int i = 0;
-				  for (i = 0; i<8; i++) {
-					  *(((char*)&temp)+i)=data[i];
-					  *(((char*)&pres)+i)=data[i+8];
-					  *(((char*)&hum)+i)=data[i+16];
-				  }
-				pkt_out->data =(uint32_t)(hum*1000);
-			}
-#endif
 			return 1;
-
 			break;
 
 		case SET_SENSACT:
