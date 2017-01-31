@@ -44,7 +44,7 @@ typedef enum {
 } pkt_msg;
 
 typedef struct {
-	uint32_t data;      		/**< Measured / current data */
+	unsigned char data [32];      		/**< Measured / current data */
 	uint16_t pkt_cnt;
 	pkt_msg msg;        /**< Message type */
 	uint8_t cnt;       /**< Count: for ex count of devs / number of current dev */

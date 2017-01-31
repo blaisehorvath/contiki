@@ -1,6 +1,5 @@
 #include "SAM.h"
 
-#include <string.h>
 
 
 void sam_init() {
@@ -42,22 +41,26 @@ void sam_add_sensact(sensact_descriptor_t sensor) {
 
 void sam_read_sensact(sensact_descriptor_t* sensact, sensact_rw_result_t* result) {
 
+	memset(&result->data, 0x00, SENSACT_DATA_SIZE); //TODO: remove this when the type system has finalized
+
 	if(sensact != NULL) {
 		sensact->read(sensact, result);
 	}
 	else {
-		result->data = 0;
+		result->data[0] = 0;
 		result->err = SENSACT_MISSING;
 	}
 }
 
 void sam_write_sensact(sensact_descriptor_t* sensact, uint32_t* data, sensact_rw_result_t* result) {
 
+	memset(&result->data, 0x00, SENSACT_DATA_SIZE); //TODO: remove this when the type system has finalized
+
 	if(sensact != NULL) {
 		sensact->write(sensact, data, result);
 	}
 	else {
-		result->data = 0;
+		result->data[0] = 0;
 		result->err = SENSACT_MISSING;
 	}
 }

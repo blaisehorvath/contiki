@@ -1,7 +1,7 @@
 all: udp-client udp-server
 CONTIKI=../../..
 PROJECT_SOURCEFILES += true2air_prot.c bus_manager.c SAM.c cc1310_onboard_devices.c tru2air_i2c_protocol.c
-CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\" -Wno-discarded-qualifiers -Wno-pointer-sign -Wno-unused-variable -Wno-unused-function
+CFLAGS += -DPROJECT_CONF_H=\"project-conf.h\" -Wno-discarded-qualifiers -Wno-pointer-sign -Wno-unused-variable -Wno-unused-function -Wno-incompatible-pointer-types -Wno-missing-braces -Wno-int-conversion
 
 ifdef WITH_COMPOWER
 APPS+=powertrace

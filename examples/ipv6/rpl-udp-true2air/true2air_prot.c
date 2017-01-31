@@ -40,7 +40,8 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 		case SET_IPADDR:
 			printf("SET IPADDR, init:%d\n",node_initialized);
 			pkt_out->msg = SET_IPADDR;// Don't answer
-			pkt_out->data = 0;
+			memset(pkt_out->data[0], 0x00, SENSACT_DATA_SIZE);
+			pkt_out->data[0] = 0;
 			pkt_out->new_device = node_initialized;
 			sprintf(pkt_out->name,"REPLY SET_IPADDR!");
 			pkt_out->cnt = 2;
@@ -48,9 +49,11 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			return 1;
 
 		/* Get the number of sensors actuators the tru2air node has*/
-		case GET_SENSACT_LIST:
+		case GET_SENSACT_LIST: //TODO: it would be better and more consistent to use pkt-> data instead of pkt->cnt for sending the sam devices number
 			pkt_out->msg = SENSACT_LIST_ACK;
-			pkt_out->data = 0;
+			memset(pkt_out->data, 0x00, SENSACT_DATA_SIZE);
+			pkt_out->data[0] = 0;
+			pkt_out->data[0] = 0;
 			pkt_out->new_device = 0;
 			sprintf(pkt_out->name,"REPLY FROM NODE!");
 			pkt_out->cnt = sam_get_sensact_num();
@@ -58,9 +61,11 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			return 1;
 
 		/* Senging the info of the pkt_in->cnt'th sensor's name */
-		case SENSACT_LIST_ITEM:
+		case SENSACT_LIST_ITEM: //TODO: again it would be better to use data instead of cnt
 			pkt_out->msg = SENSACT_LIST_ITEM;
-			pkt_out->data = 0;
+			memset(pkt_out->data[0], 0x00, SENSACT_DATA_SIZE);
+			pkt_out->data[0] = 0;
+			pkt_out->data[0] = 0;
 			pkt_out->new_device = 0;
 			pkt_out->cnt = pkt_in->cnt;
 
@@ -90,7 +95,7 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 
 			if(result.err == NO_SENSACT_ERROR) {
 				sprintf(pkt_out->name, device_list[pkt_in->cnt].name);
-				pkt_out->data = result.data;
+				memcpy(&pkt_out->data, result.data, SENSACT_DATA_SIZE);
 			}
 			else {
 				pkt_out->error = result.err;
@@ -104,9 +109,9 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			pkt_out->msg = SET_SENSACT_ACK;
 			pkt_out->new_device = 0;
 			pkt_out->cnt = pkt_in->cnt;
-			pkt_out->data = pkt_in->data;
 
 			if(pkt_in->cnt < 0 || pkt_in->cnt > SAM_SENSACTS_MAX_NUM) {
+			memcpy(pkt_out->data, pkt_in->data, SENSACT_DATA_SIZE); //TODO: is it unecessary?
 				pkt_out->error = INVALID_SAM_ADDR;
 				return 1;
 			}
@@ -118,10 +123,10 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 
 			device_list[pkt_in->cnt].write(&device_list[pkt_in->cnt], &(pkt_in->data), &result);
 
-			if (result.err == NO_SENSACT_ERROR) pkt_out->data = pkt_in->data; //TODO: possible bug source
+			if (result.err == NO_SENSACT_ERROR) memcpy(pkt_out->data, pkt_in->data, SENSACT_DATA_SIZE); //TODO: possible bug source
 			else {
 				sprintf(pkt_out->name, "SENSACT ERROR"); //TODO: error handling
-				pkt_out->data = pkt_in->data;
+				memcpy(pkt_out->data, pkt_in->data, SENSACT_DATA_SIZE);
 			}
 
 			return 1;

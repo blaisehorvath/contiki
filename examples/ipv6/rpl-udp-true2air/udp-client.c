@@ -154,7 +154,8 @@ send_init_packet(void *ptr)
   rfnode_pkt pkt;int i = 0;
   PRINTF("Send SET_IPADDR to the server\n");
   pkt.cnt=1;
-  pkt.data=2;
+  memset(&pkt.data, 0x00, 32);
+  pkt.data[0]=2;
   pkt.new_device = 0;
   pkt.msg = SET_IPADDR;
   pkt.pkt_cnt = 0;

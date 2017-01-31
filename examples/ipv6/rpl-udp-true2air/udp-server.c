@@ -134,7 +134,7 @@ static int uart_rx_callback(unsigned char c) {
 		}
 	}
 	else {// I receiving a packet
-		if (rx_buf_curr_char == 32+16){
+		if (rx_buf_curr_char == 76){
 			//printf("name:%s\n",((rfnode_pkt*)rx_buf)->name);
 			//PRINT6ADDR();
 			send_rfnode_pkt((rfnode_pkt*)rx_buf,(uip_ip6addr_t*)&rx_buf[sizeof(rfnode_pkt)]);

@@ -9,7 +9,8 @@ sensact_descriptor_t cc1310_red_led = {
 		set_red_led,
 		"RED LED",
 		TRU2AIR_CLIENT_ONBOARD_LEDS,
-		0x01
+		0x01,
+		SENSACT_TRU2AIR_LED
 };
 
 sensact_descriptor_t cc1310_green_led = {
@@ -17,7 +18,8 @@ sensact_descriptor_t cc1310_green_led = {
 		set_green_led,
 		"GREEN LED",
 		TRU2AIR_CLIENT_ONBOARD_LEDS,
-		0x02
+		0x02,
+		SENSACT_TRU2AIR_LED
 };
 
 
@@ -30,7 +32,8 @@ sensact_descriptor_t cc1310_relay0 = {
 		write_relay,
 		"RELAY0",
 		TRU2AIR_CLIENT_ONBOARD_RELAYS,
-		0x00
+		0x00,
+		SENSACT_TRU2AIR_RELAY
 };
 
 sensact_descriptor_t cc1310_relay1 = {
@@ -38,7 +41,8 @@ sensact_descriptor_t cc1310_relay1 = {
 		write_relay,
 		"RELAY1",
 		TRU2AIR_CLIENT_ONBOARD_RELAYS,
-		0x01
+		0x01,
+		SENSACT_TRU2AIR_RELAY
 };
 
 sensact_descriptor_t cc1310_relay2 = {
@@ -46,7 +50,8 @@ sensact_descriptor_t cc1310_relay2 = {
 		write_relay,
 		"RELAY2",
 		TRU2AIR_CLIENT_ONBOARD_RELAYS,
-		0x02
+		0x02,
+		SENSACT_TRU2AIR_RELAY
 };
 
 
@@ -55,7 +60,8 @@ sensact_descriptor_t cc1310_relay3 = {
 		write_relay,
 		"RELAY3",
 		TRU2AIR_CLIENT_ONBOARD_RELAYS,
-		0x03
+		0x03,
+		SENSACT_TRU2AIR_RELAY
 };
 
 
@@ -64,23 +70,22 @@ sensact_descriptor_t cc1310_relay3 = {
  *--------------------------------------------------------------*/
 void read_relay(sensact_descriptor_t* sensact, sensact_rw_result_t* result){
 
-
 	if (sensact->dev_id != TRU2AIR_CLIENT_ONBOARD_RELAYS) {
-		result->data = 0;
+		result->data[0] = 0;
 		result->err = INVALID_DEVICE_ADDR;
 		return;
 	}
 
 	if (sensact->sensact_id > TRU2AIR_CLIENT_ONBOARD_RELAYS_NUM) {
-		result->data = 0;
+		result->data[0] = 0;
 		result->err = INVALID_SENSACT_ID;
 		return;
 	}
 
 //	IOCPinTypeGpioInput(RELAY_PINS[sensact->sensact_id]);
 //	result->data = GPIO_readDio(RELAY_PINS[sensact->sensact_id]);
-	result->data = (unsigned int) *( (unsigned int*) ( GPIO_BASE +  RELAY_PINS[sensact->sensact_id]) );
-	printf("[GPIO READ] %d \n", result->data);
+	*(unsigned int*)result->data = (unsigned int) *( (unsigned int*) ( GPIO_BASE +  RELAY_PINS[sensact->sensact_id]) );
+	printf("[GPIO READ] %d \n", result->data[0]);
 	result->err = NO_SENSACT_ERROR;
 }
 
@@ -90,28 +95,27 @@ void read_relay(sensact_descriptor_t* sensact, sensact_rw_result_t* result){
  *--------------------------------------------------------------*/
 void write_relay(sensact_descriptor_t* sensact, uint32_t* setValue, sensact_rw_result_t* result){
 
-
 	if (sensact->dev_id != TRU2AIR_CLIENT_ONBOARD_RELAYS) {
-		result->data = 0;
+		result->data[0] = 0;
 		result->err = INVALID_DEVICE_ADDR;
 		return;
 	}
 
 	if (sensact->sensact_id > TRU2AIR_CLIENT_ONBOARD_RELAYS_NUM) {
-		result->data = 0;
+		result->data[0] = 0;
 		result->err = INVALID_SENSACT_ID;
 		return;
 	}
 
 	if ((*setValue != 0 && *setValue !=1) || setValue == NULL) {
-		result->data = 0;
+		result->data[0] = 0;
 		result->err = WRITE_VALUE_OUT_OF_RANGE;
 		return;
 	}
 
 	IOCPinTypeGpioOutput(RELAY_PINS[sensact->sensact_id]);
 	GPIO_writeDio(RELAY_PINS[sensact->sensact_id], *setValue);
-	result->data = 0;
+	result->data[0] = 0;
 	result->err = NO_SENSACT_ERROR;
 }
 
@@ -125,19 +129,19 @@ void set_red_led (sensact_descriptor_t* sensor, uint32_t* toWrite, sensact_rw_re
 
 	if (*toWrite == 1) {
 		leds_on(LEDS_RED);
-		result->data = 1;
+		result->data[0] = 1;
 		result->err = NO_SENSACT_ERROR;
 	}
 	else if (*toWrite == 0) {
 		leds_off(LEDS_RED);
-		result->data = 0;
+		result->data[0] = 0;
 		result->err = NO_SENSACT_ERROR;
 	}
 	else {
-		result->data = 0;
+		result->data[0] = 0;
 		result->err = WRITE_VALUE_OUT_OF_RANGE;
 	}
-	printf("[SET RED LED] %d\n", result->data);
+	printf("[SET RED LED] %d\n", result->data[0]);
 }
 
 void read_red_led (sensact_descriptor_t* sensact, sensact_rw_result_t* result) {
@@ -147,14 +151,14 @@ void read_red_led (sensact_descriptor_t* sensact, sensact_rw_result_t* result) {
 	 * differentiate between when some error happened or the led is off...
 	 * */
 	if ( leds_get() && LEDS_RED ) {
-		result->data = 1;
+		result->data[0] = 1;
 		result->err = NO_SENSACT_ERROR;
 	}
 	else {
-		result->data = 0;
+		result->data[0] = 0;
 		result->err = NO_SENSACT_ERROR;
 	}
-	printf("[READ RED LED] %d\n", result->data);
+	printf("[READ RED LED] %d\n", result->data[0]);
 }
 
 
@@ -166,19 +170,19 @@ void read_red_led (sensact_descriptor_t* sensact, sensact_rw_result_t* result) {
 void set_green_led (sensact_descriptor_t* sensor, uint32_t* toWrite, sensact_rw_result_t* result) {
 	if (*toWrite == 1) {
 		leds_on(LEDS_GREEN);
-		result->data = 1;
+		result->data[0] = 1;
 		result->err = NO_SENSACT_ERROR;
 	}
 	else if (*toWrite == 0) {
 		leds_off(LEDS_GREEN);
-		result->data = 0;
+		result->data[0] = 0;
 		result->err = NO_SENSACT_ERROR;
 	}
 	else {
-		result->data = 0;
+		result->data[0] = 0;
 		result->err = WRITE_VALUE_OUT_OF_RANGE;
 	}
-	printf("[SET GREEN LED] %d\n", result->data);
+	printf("[SET GREEN LED] %d\n", result->data[0]);
 }
 
 void read_green_led (sensact_descriptor_t* sensact, sensact_rw_result_t* result) {
@@ -188,12 +192,12 @@ void read_green_led (sensact_descriptor_t* sensact, sensact_rw_result_t* result)
 	 * differentiate between when some error happened or the led is off...
 	 * */
 	if ( leds_get() && LEDS_GREEN ) {
-		result->data = 1;
+		result->data[0] = 1;
 		result->err = NO_SENSACT_ERROR;
 	}
 	else {
-		result->data = 0;
+		result->data[0] = 0;
 		result->err = NO_SENSACT_ERROR;
 	}
-	printf("[READ GREEN LED] %d\n", result->data);
+	printf("[READ GREEN LED] %d\n", result->data[0]);
 }

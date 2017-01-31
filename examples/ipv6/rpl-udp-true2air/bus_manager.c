@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Defines */
 #define I2C_BUS_ADDRESS_RANGE 127
 
 static uint8_t slave_addr;
@@ -28,11 +29,11 @@ void bus_manager_r_sensact(sensact_descriptor_t* sensact, sensact_rw_result_t* r
 	uint8_t i2c_addr = bus_manager_get_sensact_i2c_id(&sensact->dev_id);
 
 	unsigned char headerBuff[2] = {SENS_ACT_READ, sensact->sensact_id};
-	unsigned resultBuff[sizeof(int)];
+	unsigned char resultBuff[32];
 
 	board_i2c_select(BOARD_I2C_INTERFACE_0, i2c_addr);
 	board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_SIZE);
-	board_i2c_read((char*)&(result->data), sizeof(int)) ;
+	board_i2c_read(result->data, SENSACT_DATA_SIZE);
 	board_i2c_shutdown();
 }
 
@@ -50,10 +51,10 @@ void bus_manager_w_sensact(sensact_descriptor_t* sensact, unsigned int* toWrite,
 		board_i2c_write(outBuff, 2 + sizeof(int));
 		board_i2c_shutdown();
 
-		result->data = 0;
+		result->data[0] = 0;
 		result->err = NO_SENSACT_ERROR;
 	} else {
-		result->data = 0;
+		result->data[0] = 0;
 		result->err = SENSACT_MISSING;
 	}
 

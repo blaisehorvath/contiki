@@ -19,9 +19,19 @@ Adafruit_BME280 bme(BME_CS, BME_MOSI, BME_MISO,  BME_SCK);
 //communication states
 enum I2C_COMM_PROT_ACTION {GET_SENSACT_NUM, GET_SENSOR_NAME, GET_SENSOR_TYPE, SENS_ACT_READ, SENS_ACT_WRITE};
 
+//SENSACT MESUREMENT DATA SIZE
+const unsigned char SENSACT_DATA_SIZE = 32;
+unsigned char SENSACT_MEASURE_RESULT[SENSACT_DATA_SIZE];
 
 // Sensor return types
-enum TRU2AIR_SENSOR_DATA_TYPE {SENS_UINT32, SENS_DOUBLE, SENS_MAX_RANGE=65535};
+enum TRU2AIR_SENSACT_TYPE {
+	SENSACT_TRU2AIR_LED,
+	SENSACT_TRU2AIR_RELAY,
+	SENSACT_BME280_TEMP,
+	SENSACT_BME280_PRESSURE,
+	SENSACT_BME280_HUMIDITY,
+	SENS_MAX_RANGE=65535
+};
 
 // DEVICE STATE
 byte STATE = GET_SENSACT_NUM;
@@ -44,7 +54,7 @@ typedef struct sensact_descriptor_t {
 //TEMPORARY DUMMY VARIABLES
 byte SENS_NUM = 0x03;
 unsigned int uint32_answer = 15;
-sensact_descriptor_t sensors[] = {{"BME280_PRESSURE", SENS_UINT32}, {"BME280_TEMP", SENS_UINT32}, {"BME280_HUM", SENS_DOUBLE}};
+sensact_descriptor_t sensors[] = {{"BME280_PRESSURE", SENSACT_BME280_PRESSURE}, {"BME280_TEMP", SENSACT_BME280_TEMP}, {"BME280_HUM", SENSACT_BME280_HUMIDITY}};
 unsigned char device_addr[] = {0xde, 0xad, 0xbe, 0xef};
 
 
@@ -156,24 +166,28 @@ void requestCb() {
       break;
 
     case SENS_ACT_READ:
+      
+      double measurement;
+      memset(SENSACT_MEASURE_RESULT, 0x00, SENSACT_DATA_SIZE);
+      
       switch(HEADER.specifier) {
         //pressure
         case 0:
-          unsigned int p;
-          p = bme.readPressure()*100; //10e-2 C
-          Wire.write((char*)&p, 4);
+          measurement = bme.readPressure();
+          memcpy(SENSACT_MEASURE_RESULT, &measurement, sizeof(double));
+          Wire.write((char*)&SENSACT_MEASURE_RESULT, SENSACT_DATA_SIZE);
           break;
         //temp
         case 1:
-          unsigned int temp;
-          temp = bme.readTemperature() * 100; //Pa
-          Wire.write((char*)&temp,4);
+          measurement = bme.readTemperature();
+          memcpy(SENSACT_MEASURE_RESULT, &measurement, sizeof(double));
+          Wire.write((char*)&SENSACT_MEASURE_RESULT, SENSACT_DATA_SIZE);
           break;
         //hum
         case 2:
-          unsigned int hum;
-          hum = bme.readHumidity() * 100; //ezrelék
-          Wire.write((char*)&hum, 4);
+          measurement = bme.readHumidity();
+          memcpy(SENSACT_MEASURE_RESULT, &measurement, sizeof(double));
+          Wire.write((char*)&SENSACT_MEASURE_RESULT, SENSACT_DATA_SIZE);
           break;
         default:
           ;

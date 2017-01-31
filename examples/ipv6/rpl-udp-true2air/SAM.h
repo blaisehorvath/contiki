@@ -1,20 +1,28 @@
 #include <stdio.h>
 #include <string.h>
 #include "tru2air_i2c_protocol.h"
+#include <string.h>
 
 #ifndef EXAMPLES_IPV6_RPL_UDP_TRUE2AIR_SPGBZ_H_
 #define EXAMPLES_IPV6_RPL_UDP_TRUE2AIR_SPGBZ_H_
+
+/* Temporary defines */
+#define SENSACT_DATA_SIZE 32
 
 /* Defines */
 #define SAM_SENSACTS_MAX_NUM 127
 
 /* Enums */
+
 /*!
- * The type that the sensor returns
+ * The type of the sensor, it also defines what king of type is returned from the mesurement
  */
-enum TRU2AIR_SENSOR_DATA_TYPE {
-	SENS_UINT32,
-	SENS_DOUBLE,
+enum TRU2AIR_SENSACT_TYPE {
+	SENSACT_TRU2AIR_LED,
+	SENSACT_TRU2AIR_RELAY,
+	SENSACT_BME280_TEMP,
+	SENSACT_BME280_PRESSURE,
+	SENSACT_BME280_HUMIDITY,
 	SENS_MAX_RANGE=65535
 };
 
@@ -29,12 +37,17 @@ enum SENSACT_COMM_ERR_T {
 	INVALID_SAM_ADDR, /* The given number is not a valid SAM index */
 };
 
+typedef union sensact_result_data_type {
+	uint32_t integer;
+	double floating_double;
+} sensact_result_data_type;
+
 /*! sensact_rw_result_t describes a data type which is interchanged in tru2air communication protocols.
  * err is the flag which is true if some kind of error occured during requesting, reading out or transmitting the data
  * data is the data returned
  */
 typedef struct sensact_rw_result_t {
-	unsigned int data;
+	unsigned char data[32];
 	unsigned char err;
 } sensact_rw_result_t;
 
