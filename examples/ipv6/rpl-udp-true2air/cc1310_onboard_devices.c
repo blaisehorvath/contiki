@@ -7,8 +7,8 @@
 sensact_descriptor_t cc1310_red_led = {
 		read_red_led,
 		set_red_led,
-		"RED LED",
 		TRU2AIR_CLIENT_ONBOARD_LEDS,
+		"RED LED",
 		0x01,
 		SENSACT_TRU2AIR_LED
 };
@@ -16,8 +16,8 @@ sensact_descriptor_t cc1310_red_led = {
 sensact_descriptor_t cc1310_green_led = {
 		read_green_led,
 		set_green_led,
-		"GREEN LED",
 		TRU2AIR_CLIENT_ONBOARD_LEDS,
+		"GREEN LED",
 		0x02,
 		SENSACT_TRU2AIR_LED
 };
@@ -30,8 +30,8 @@ unsigned char RELAY_PINS[] = {IOID_21, IOID_27, IOID_26, IOID_25};
 sensact_descriptor_t cc1310_relay0 = {
 		read_relay,
 		write_relay,
-		"RELAY0",
 		TRU2AIR_CLIENT_ONBOARD_RELAYS,
+		"RELAY0",
 		0x00,
 		SENSACT_TRU2AIR_RELAY
 };
@@ -39,8 +39,8 @@ sensact_descriptor_t cc1310_relay0 = {
 sensact_descriptor_t cc1310_relay1 = {
 		read_relay,
 		write_relay,
-		"RELAY1",
 		TRU2AIR_CLIENT_ONBOARD_RELAYS,
+		"RELAY1",
 		0x01,
 		SENSACT_TRU2AIR_RELAY
 };
@@ -48,8 +48,8 @@ sensact_descriptor_t cc1310_relay1 = {
 sensact_descriptor_t cc1310_relay2 = {
 		read_relay,
 		write_relay,
-		"RELAY2",
 		TRU2AIR_CLIENT_ONBOARD_RELAYS,
+		"RELAY2",
 		0x02,
 		SENSACT_TRU2AIR_RELAY
 };
@@ -58,8 +58,8 @@ sensact_descriptor_t cc1310_relay2 = {
 sensact_descriptor_t cc1310_relay3 = {
 		read_relay,
 		write_relay,
-		"RELAY3",
 		TRU2AIR_CLIENT_ONBOARD_RELAYS,
+		"RELAY3",
 		0x03,
 		SENSACT_TRU2AIR_RELAY
 };
@@ -82,9 +82,9 @@ void read_relay(sensact_descriptor_t* sensact, sensact_rw_result_t* result){
 		return;
 	}
 
-//	IOCPinTypeGpioInput(RELAY_PINS[sensact->sensact_id]);
-//	result->data = GPIO_readDio(RELAY_PINS[sensact->sensact_id]);
-	*(unsigned int*)result->data = (unsigned int) *( (unsigned int*) ( GPIO_BASE +  RELAY_PINS[sensact->sensact_id]) );
+
+	if  (*( (unsigned int*) ( GPIO_BASE +  RELAY_PINS[sensact->sensact_id]) )) result->data[0] = 1;
+	else { result->data[0]=0; }
 	printf("[GPIO READ] %d \n", result->data[0]);
 	result->err = NO_SENSACT_ERROR;
 }
@@ -93,7 +93,7 @@ void read_relay(sensact_descriptor_t* sensact, sensact_rw_result_t* result){
 /*--------------------------------------------------------------
  *						Relay write
  *--------------------------------------------------------------*/
-void write_relay(sensact_descriptor_t* sensact, uint32_t* setValue, sensact_rw_result_t* result){
+void write_relay(sensact_descriptor_t* sensact, uint8_t* setValue, sensact_rw_result_t* result){
 
 	if (sensact->dev_id != TRU2AIR_CLIENT_ONBOARD_RELAYS) {
 		result->data[0] = 0;
@@ -125,7 +125,7 @@ void write_relay(sensact_descriptor_t* sensact, uint32_t* setValue, sensact_rw_r
  *						Red led
  *--------------------------------------------------------------*/
 
-void set_red_led (sensact_descriptor_t* sensor, uint32_t* toWrite, sensact_rw_result_t* result) {
+void set_red_led (sensact_descriptor_t* sensor, uint8_t* toWrite, sensact_rw_result_t* result) {
 
 	if (*toWrite == 1) {
 		leds_on(LEDS_RED);
@@ -167,7 +167,7 @@ void read_red_led (sensact_descriptor_t* sensact, sensact_rw_result_t* result) {
  *--------------------------------------------------------------*/
 
 
-void set_green_led (sensact_descriptor_t* sensor, uint32_t* toWrite, sensact_rw_result_t* result) {
+void set_green_led (sensact_descriptor_t* sensor, uint8_t* toWrite, sensact_rw_result_t* result) {
 	if (*toWrite == 1) {
 		leds_on(LEDS_GREEN);
 		result->data[0] = 1;

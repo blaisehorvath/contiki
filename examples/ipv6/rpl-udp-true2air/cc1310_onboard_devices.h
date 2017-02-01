@@ -4,9 +4,9 @@
 
 #define TRU2AIR_CLIENT_ONBOARD_LEDS 1
 
-void set_red_led (sensact_descriptor_t* sensor, uint32_t* toWrite, sensact_rw_result_t* result);
+void set_red_led (sensact_descriptor_t* sensor, uint8_t* toWrite, sensact_rw_result_t* result);
 void read_red_led (sensact_descriptor_t* sensact, sensact_rw_result_t* result);
-void set_green_led (sensact_descriptor_t* sensor, uint32_t* toWrite, sensact_rw_result_t* result);
+void set_green_led (sensact_descriptor_t* sensor, uint8_t* toWrite, sensact_rw_result_t* result);
 void read_green_led (sensact_descriptor_t* sensact, sensact_rw_result_t* result);
 
 #ifndef SIMULATED
@@ -19,7 +19,7 @@ void read_green_led (sensact_descriptor_t* sensact, sensact_rw_result_t* result)
 
 
 void read_relay(sensact_descriptor_t* sensact, sensact_rw_result_t* result);
-void write_relay(sensact_descriptor_t* sensact, uint32_t* setValue, sensact_rw_result_t* result);
+void write_relay(sensact_descriptor_t* sensact, uint8_t* setValue, sensact_rw_result_t* result);
 
 #endif
 

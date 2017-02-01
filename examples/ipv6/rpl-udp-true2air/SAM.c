@@ -5,7 +5,13 @@
 void sam_init() {
 	int i;
 	for (i = 0; i<SAM_SENSACTS_MAX_NUM; i++) {
-		device_list[i] = (sensact_descriptor_t){0,0,"",0,0,0};
+		device_list[i].dev_id =0;
+		strcpy(&(device_list[i].name),"");
+		device_list[i].read = NULL;
+		device_list[i].write = NULL;
+		device_list[i].sensact_type = 0;
+		device_list[i].sensact_id = 0;
+
 	}
 }
 
@@ -19,7 +25,7 @@ void sam_del_device(uint32_t dev_id) {
 			device_list[i].read = 0;
 			device_list[i].sensact_id = 0;
 			device_list[i].write = 0;
-			device_list[i].sensact_return_type =  0;
+			device_list[i].sensact_type =  0;
 		}
 	}
 }
@@ -33,7 +39,7 @@ void sam_add_sensact(sensact_descriptor_t sensor) {
 			device_list[i].sensact_id = sensor.sensact_id;
 			device_list[i].read = *(sensor.read);
 			device_list[i].write = *(sensor.write);
-			device_list[i].sensact_return_type = sensor.sensact_return_type;
+			device_list[i].sensact_type = sensor.sensact_type;
 			break;
 		}
 	}
@@ -41,7 +47,7 @@ void sam_add_sensact(sensact_descriptor_t sensor) {
 
 void sam_read_sensact(sensact_descriptor_t* sensact, sensact_rw_result_t* result) {
 
-	memset(&result->data, 0x00, SENSACT_DATA_SIZE); //TODO: remove this when the type system has finalized
+	memset(result->data, 0x00, SENSACT_DATA_SIZE); //TODO: remove this when the type system has finalized
 
 	if(sensact != NULL) {
 		sensact->read(sensact, result);
@@ -52,9 +58,9 @@ void sam_read_sensact(sensact_descriptor_t* sensact, sensact_rw_result_t* result
 	}
 }
 
-void sam_write_sensact(sensact_descriptor_t* sensact, uint32_t* data, sensact_rw_result_t* result) {
+void sam_write_sensact(sensact_descriptor_t* sensact, uint8_t* data, sensact_rw_result_t* result) {
 
-	memset(&result->data, 0x00, SENSACT_DATA_SIZE); //TODO: remove this when the type system has finalized
+	memset(result->data, 0x00, SENSACT_DATA_SIZE); //TODO: remove this when the type system has finalized
 
 	if(sensact != NULL) {
 		sensact->write(sensact, data, result);
@@ -66,13 +72,15 @@ void sam_write_sensact(sensact_descriptor_t* sensact, uint32_t* data, sensact_rw
 }
 
 unsigned char sam_get_sensact_num() {
+
 	unsigned char i;
+	unsigned char sum = 0;
 
 	for (i=0; i<SAM_SENSACTS_MAX_NUM; i++) {
-		if(device_list[i].dev_id == 0) return i;
+		if(device_list[i].dev_id != 0) sum++;
 	}
 
-	return SAM_SENSACTS_MAX_NUM;
+	return sum;
 };
 
 sensact_descriptor_t* sam_get_sensact_by_name(char* name) {

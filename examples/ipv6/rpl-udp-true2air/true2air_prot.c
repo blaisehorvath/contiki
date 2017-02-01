@@ -53,7 +53,6 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			pkt_out->msg = SENSACT_LIST_ACK;
 			memset(pkt_out->data, 0x00, SENSACT_DATA_SIZE);
 			pkt_out->data[0] = 0;
-			pkt_out->data[0] = 0;
 			pkt_out->new_device = 0;
 			sprintf(pkt_out->name,"REPLY FROM NODE!");
 			pkt_out->cnt = sam_get_sensact_num();
@@ -62,20 +61,31 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 
 		/* Senging the info of the pkt_in->cnt'th sensor's name */
 		case SENSACT_LIST_ITEM: //TODO: again it would be better to use data instead of cnt
+
+			/* Init local vars*/
+			char dataInd = 0;
+
+			/* Setting up the outgoing pkt */
+			memset(pkt_out->data, 0x00, SENSACT_DATA_SIZE); //TODO: remove this when read is used through SAM
 			pkt_out->msg = SENSACT_LIST_ITEM;
-			memset(pkt_out->data[0], 0x00, SENSACT_DATA_SIZE);
-			pkt_out->data[0] = 0;
-			pkt_out->data[0] = 0;
 			pkt_out->new_device = 0;
 			pkt_out->cnt = pkt_in->cnt;
 
-			//TODO: handle SENSACT MISSING
-			if (pkt_in->cnt >= 0 && pkt_in->cnt < SAM_SENSACTS_MAX_NUM) sprintf(pkt_out->name, device_list[pkt_in->cnt].name);
+			/* If everything ok, continue filling in the out pkt*/
+			if (pkt_in->cnt >= 0 && pkt_in->cnt < SAM_SENSACTS_MAX_NUM) {
+
+				uint16_t* ptr = &device_list[pkt_in->cnt].sensact_type-1;
+				memcpy(pkt_out->data, ptr, 2); // copy the sensact type to the data field
+
+				strcpy(pkt_out->name, device_list[pkt_in->cnt].name ); // copying name
+			}
 			else { pkt_out->error = INVALID_SAM_ADDR; }
 			return 1;
 
 		/* Send something mesured by the pkt_in'th sensor */
 		case GET_SENSACT: // Dummy sensor handler
+
+			memset(result.data, 0x00, SENSACT_DATA_SIZE);
 
 			pkt_out->msg = GET_SENSACT_ACK;
 			pkt_out->new_device = 0;
@@ -95,7 +105,7 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 
 			if(result.err == NO_SENSACT_ERROR) {
 				sprintf(pkt_out->name, device_list[pkt_in->cnt].name);
-				memcpy(&pkt_out->data, result.data, SENSACT_DATA_SIZE);
+				memcpy(pkt_out->data, result.data, SENSACT_DATA_SIZE);
 			}
 			else {
 				pkt_out->error = result.err;
@@ -121,7 +131,7 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 				return 1;
 			}
 
-			device_list[pkt_in->cnt].write(&device_list[pkt_in->cnt], &(pkt_in->data), &result);
+			device_list[pkt_in->cnt].write(&device_list[pkt_in->cnt], pkt_in->data, &result);
 
 			if (result.err == NO_SENSACT_ERROR) memcpy(pkt_out->data, pkt_in->data, SENSACT_DATA_SIZE); //TODO: possible bug source
 			else {

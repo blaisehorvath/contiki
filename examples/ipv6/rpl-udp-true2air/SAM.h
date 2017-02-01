@@ -57,11 +57,11 @@ typedef struct sensact_rw_result_t {
  */
 typedef struct sensact_descriptor_t {
 	void (*read) (struct sensact_descriptor_t* sensact, sensact_rw_result_t* result);
-	void (*write)(struct sensact_descriptor_t* sensact, uint32_t* data, sensact_rw_result_t* result);
+	void (*write)(struct sensact_descriptor_t* sensact, uint8_t* data, sensact_rw_result_t* result);
 	uint32_t dev_id;
 	char name[23];
 	uint8_t sensact_id;
-	uint16_t sensact_return_type;
+	uint16_t sensact_type;
 } sensact_descriptor_t;
 
 
@@ -86,7 +86,7 @@ void sam_add_sensact(sensact_descriptor_t sensor);
 
 //TODO: DOC
 void sam_read_sensact(sensact_descriptor_t* sensact, sensact_rw_result_t* result);
-void sam_write_sensact(sensact_descriptor_t* sensact, uint32_t* data, sensact_rw_result_t* result);
+void sam_write_sensact(sensact_descriptor_t* sensact, uint8_t* data, sensact_rw_result_t* result);
 unsigned char sam_get_sensact_num();
 
 sensact_descriptor_t* sam_get_sensact_by_name(char* name);

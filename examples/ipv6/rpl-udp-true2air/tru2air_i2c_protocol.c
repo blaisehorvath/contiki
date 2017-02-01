@@ -122,7 +122,7 @@ void init_tru2air_sensor_node(){
 				new_sensact.sensact_id = currentSensor;
 				new_sensact.read = bus_manager_r_sensact;
 				new_sensact.write = bus_manager_w_sensact;
-				new_sensact.sensact_return_type = *((uint16_t*)headerBuff);
+				new_sensact.sensact_type = *((uint16_t*)headerBuff);
 
 				sam_add_sensact(new_sensact);
 
