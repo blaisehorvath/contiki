@@ -107,7 +107,7 @@ void init_tru2air_sensor_node(){
 				board_i2c_read(typeBuff, 2);
 				board_i2c_shutdown();
 
-				printf("[RECIEVED] Name: %s Type: 0x%04x \n", nameBuff, *(uint16_t*)typeBuff);
+				printf("[GOT SENSACT] Name: %s Type: 0x%04x \n", nameBuff, *(uint16_t*)typeBuff);
 
 				STATE = REGISTER_TO_SAM;
 				break;
@@ -122,7 +122,7 @@ void init_tru2air_sensor_node(){
 				new_sensact.sensact_id = currentSensor;
 				new_sensact.read = bus_manager_r_sensact;
 				new_sensact.write = bus_manager_w_sensact;
-				new_sensact.sensact_type = *((uint16_t*)headerBuff);
+				new_sensact.sensact_type = *((uint16_t*)typeBuff);
 
 				sam_add_sensact(new_sensact);
 
