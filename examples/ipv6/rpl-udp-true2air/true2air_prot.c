@@ -31,10 +31,14 @@ uint8_t node_initialized = 0;
 uint8_t slave_addr = 0x02;
 int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 {
+	/*Initializing local vars*/
 	node_initialized = 1;
 	sensact_rw_result_t result;
+
+	/*Managing pkt*/
 	print_pkt_without_addr(pkt_in);
 	pkt_out->pkt_cnt = pkt_in->pkt_cnt;
+
 	switch(pkt_in->msg){
 
 		case SET_IPADDR:
@@ -62,9 +66,6 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 		/* Senging the info of the pkt_in->cnt'th sensor's name */
 		case SENSACT_LIST_ITEM: //TODO: again it would be better to use data instead of cnt
 
-			/* Init local vars*/
-			char dataInd = 0;
-
 			/* Setting up the outgoing pkt */
 			memset(pkt_out->data, 0x00, SENSACT_DATA_SIZE); //TODO: remove this when read is used through SAM
 			pkt_out->msg = SENSACT_LIST_ITEM;
@@ -74,10 +75,16 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			/* If everything ok, continue filling in the out pkt*/
 			if (pkt_in->cnt >= 0 && pkt_in->cnt < SAM_SENSACTS_MAX_NUM) {
 
-				uint16_t* ptr = &device_list[pkt_in->cnt].sensact_type-1;
-				memcpy(pkt_out->data, ptr, 2); // copy the sensact type to the data field
+				//uint16_t* ptr = &device_list[pkt_in->cnt].sensact_type-1;
+				//memcpy(pkt_out->data, ptr, 2); // copy the sensact type to the data field
+
+				pkt_out->data[0] = ((char*)(&device_list[pkt_in->cnt].sensact_type))[1];
+				pkt_out->data[1] = ((char*)(&device_list[pkt_in->cnt].sensact_type))[0];
+
 
 				strcpy(pkt_out->name, device_list[pkt_in->cnt].name ); // copying name
+
+				printf("[SENSACT TYPE] %s : 0x%04x : 0x%04x \n", device_list[pkt_in->cnt].name, device_list[pkt_in->cnt].sensact_type, *(uint16_t*)&pkt_out->data[1] );
 			}
 			else { pkt_out->error = INVALID_SAM_ADDR; }
 			return 1;

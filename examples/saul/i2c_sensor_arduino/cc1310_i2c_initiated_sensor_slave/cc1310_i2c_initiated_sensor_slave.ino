@@ -167,28 +167,36 @@ void requestCb() {
 
     case SENS_ACT_READ:
       
-      double measurement;
+      float measurement;
+      char BEresultArr[4];
       memset(SENSACT_MEASURE_RESULT, 0x00, SENSACT_DATA_SIZE);
       
       switch(HEADER.specifier) {
         //pressure
         case 0:
           measurement = bme.readPressure();
-          memcpy(SENSACT_MEASURE_RESULT, &measurement, sizeof(double));
+          convertLEFloatToBE(&measurement, BEresultArr);
+          
+          memcpy(SENSACT_MEASURE_RESULT, BEresultArr, sizeof(float));
           Wire.write((char*)&SENSACT_MEASURE_RESULT, SENSACT_DATA_SIZE);
           break;
         //temp
         case 1:
           measurement = bme.readTemperature();
-          memcpy(SENSACT_MEASURE_RESULT, &measurement, sizeof(double));
+          convertLEFloatToBE(&measurement, BEresultArr);
+          
+          memcpy(SENSACT_MEASURE_RESULT, BEresultArr, sizeof(float));
           Wire.write((char*)&SENSACT_MEASURE_RESULT, SENSACT_DATA_SIZE);
           break;
         //hum
         case 2:
           measurement = bme.readHumidity();
-          memcpy(SENSACT_MEASURE_RESULT, &measurement, sizeof(double));
+          convertLEFloatToBE(&measurement, BEresultArr);
+          
+          memcpy(SENSACT_MEASURE_RESULT, BEresultArr, sizeof(float));
           Wire.write((char*)&SENSACT_MEASURE_RESULT, SENSACT_DATA_SIZE);
           break;
+          
         default:
           ;
       }
@@ -205,3 +213,14 @@ void printHex4 (byte* data) {
     sprintf(tmp, "0x%02x", *data);
     Serial.print(tmp);
 }
+
+void convertLEFloatToBE (float* fl, char* BEFloatArr) {
+     char i = 0;   
+     while(i<4) {
+       BEFloatArr[3-i] = *(((char*)fl)+i);
+       i++;
+     }
+}
+
+
+
