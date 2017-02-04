@@ -61,22 +61,21 @@ unsigned char device_addr[] = {0xde, 0xad, 0xbe, 0xef};
 void setup() {
   Serial.begin(9600);  // start serial for output
   
-  Wire.begin(); // join i2c bus (address optional for master)
-  
+  //Wire.begin(); // join i2c bus (address optional for master)
   //initiating the BME driver
 
   if (!bme.begin()) {
     Serial.println("Could not find a valid BME280 sensor, check wiring!");
     while (1);
-  }
-  
+  } else { Serial.print("BME is workiasdssadng!\n");}
+
   // Starting the tru2air i2c protocol
   Wire.beginTransmission(0x10); // transmit to device #8
   Wire.write(0xde);      
   Wire.write(0xad);      
   Wire.write(0xbe);      
   Wire.write(0xef);     
-  Wire.endTransmission(false);    // stop transmitting
+  Wire.endTransmission(true);    // stop transmitting
   Wire.requestFrom(0x10, 1,false);    // request 6 bytes from slave device #8 
 
   
@@ -116,7 +115,7 @@ void receiveCb(int numBytes) {
   
   switch(HEADER.action) {
     case GET_SENSACT_NUM:
-//      Serial.print("[STATE] -> GET_SENSACT_NUM \n");
+      Serial.print("[STATE] -> GET_SENSACT_NUM \n");
       STATE = GET_SENSACT_NUM;
       break;
     case GET_SENSOR_NAME:
@@ -142,15 +141,19 @@ void receiveCb(int numBytes) {
 }
 
 void requestCb() {
-//  Serial.print("[REQUEST]\n");
+
+  Serial.print("[REQUEST]\n");
   bool endOfMsg = false;
 
   //TODO:remove this
-
-  switch(STATE) {
+  Wire.write(0xFA);
+  /*switch(STATE) {
     case GET_SENSACT_NUM:
+    
+
       Wire.write(device_addr, 4);
       Wire.write(sizeof(sensors)/sizeof(sensact_descriptor_t));
+      Serial.println("NO FREEZE");
       break;
     case GET_SENSOR_NAME:
       //TODO: handle bad HEADER
@@ -205,7 +208,7 @@ void requestCb() {
 
     default:
       break;
-  }
+  }*/
 }
 
 void printHex4 (byte* data) {

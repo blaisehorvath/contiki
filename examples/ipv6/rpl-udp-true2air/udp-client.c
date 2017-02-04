@@ -156,7 +156,7 @@ send_init_packet(void *ptr)
   pkt.cnt=1;
   memset(&pkt.data, 0x00, 32);
   pkt.data[0]=2;
-  pkt.new_device = 0;
+  pkt.new_device = 1;
   pkt.msg = SET_IPADDR;
   pkt.pkt_cnt = 0;
 #ifdef SIMULATED

@@ -27,13 +27,14 @@
 /* for SAM:*/
 //extern sensact_descriptor_t device_list[];
 
-uint8_t node_initialized = 0;
-uint8_t slave_addr = 0x02;
+uint8_t device_initialized = 0;
+uint8_t new_sensor = 0;
+
 int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 {
 	/*Initializing local vars*/
-	node_initialized = 1;
 	sensact_rw_result_t result;
+	device_initialized = 1;
 
 	/*Managing pkt*/
 	print_pkt_without_addr(pkt_in);
@@ -42,11 +43,11 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 	switch(pkt_in->msg){
 
 		case SET_IPADDR:
-			printf("SET IPADDR, init:%d\n",node_initialized);
+			printf("SET IPADDR, init:%d\n",new_sensor);
 			pkt_out->msg = SET_IPADDR;// Don't answer
 			memset(pkt_out->data[0], 0x00, SENSACT_DATA_SIZE);
 			pkt_out->data[0] = 0;
-			pkt_out->new_device = node_initialized;
+			pkt_out->new_device = new_sensor;
 			sprintf(pkt_out->name,"REPLY SET_IPADDR!");
 			pkt_out->cnt = 2;
 			pkt_out->error = NO_SENSACT_ERROR;
@@ -55,9 +56,11 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 		/* Get the number of sensors actuators the tru2air node has*/
 		case GET_SENSACT_LIST: //TODO: it would be better and more consistent to use pkt-> data instead of pkt->cnt for sending the sam devices number
 			pkt_out->msg = SENSACT_LIST_ACK;
+			new_sensor = 0;
 			memset(pkt_out->data, 0x00, SENSACT_DATA_SIZE);
 			pkt_out->data[0] = 0;
-			pkt_out->new_device = 0;
+			new_sensor = 0;
+			pkt_out->new_device = new_sensor;
 			sprintf(pkt_out->name,"REPLY FROM NODE!");
 			pkt_out->cnt = sam_get_sensact_num();
 			pkt_out->error = NO_SENSACT_ERROR;
@@ -69,7 +72,7 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			/* Setting up the outgoing pkt */
 			memset(pkt_out->data, 0x00, SENSACT_DATA_SIZE); //TODO: remove this when read is used through SAM
 			pkt_out->msg = SENSACT_LIST_ITEM;
-			pkt_out->new_device = 0;
+			pkt_out->new_device = new_sensor;
 			pkt_out->cnt = pkt_in->cnt;
 
 			/* If everything ok, continue filling in the out pkt*/
@@ -95,7 +98,7 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 			memset(result.data, 0x00, SENSACT_DATA_SIZE);
 
 			pkt_out->msg = GET_SENSACT_ACK;
-			pkt_out->new_device = 0;
+			pkt_out->new_device = new_sensor;
 			pkt_out->cnt = pkt_in->cnt;
 
 
@@ -124,7 +127,7 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 		case SET_SENSACT:
 
 			pkt_out->msg = SET_SENSACT_ACK;
-			pkt_out->new_device = 0;
+			pkt_out->new_device = new_sensor;
 			pkt_out->cnt = pkt_in->cnt;
 
 			if(pkt_in->cnt < 0 || pkt_in->cnt > SAM_SENSACTS_MAX_NUM) {
@@ -158,7 +161,7 @@ int node_pkt_reply(rfnode_pkt* pkt_in, rfnode_pkt* pkt_out)
 	return 0;
 }
 int node_is_initialized(){
-	return node_initialized;
+	return device_initialized;
 }
 void node_init_pkt(rfnode_pkt* pkt_out){
 	pkt_out->msg = SET_IPADDR;

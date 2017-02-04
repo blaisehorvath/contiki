@@ -1,6 +1,7 @@
 #include "SAM.h"
 
-
+//TODO: USE SETTER FUNCT INSTEAD
+extern uint8_t new_sensor;
 
 void sam_init() {
 	int i;
@@ -40,6 +41,7 @@ void sam_add_sensact(sensact_descriptor_t sensor) {
 			device_list[i].read = *(sensor.read);
 			device_list[i].write = *(sensor.write);
 			device_list[i].sensact_type = sensor.sensact_type;
+			new_sensor = 2;
 			break;
 		}
 	}
