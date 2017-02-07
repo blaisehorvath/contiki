@@ -3,9 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 
-/* Defines */
-#define I2C_BUS_ADDRESS_RANGE 127
-
 static uint8_t slave_addr;
 static uint8_t interface = NO_INTERFACE;
 
@@ -70,7 +67,7 @@ uint8_t bus_manager_get_sensact_i2c_id (uint32_t* device_id) {
 
 uint8_t bus_manager_register_i2c_device(uint32_t dev_addr) {
 	unsigned char i; //the 0 i2c address is reserved for the msp430
-	for (i = 1; i<I2C_BUS_ADDRESS_RANGE; i++) {
+	for (i = 0x08; i<I2C_BUS_ADDRESS_RANGE; i++) {
 		if(i2c_devices[i]==dev_addr) { // if the device reconnected before the manager had time to remove it
 			return i;
 		}

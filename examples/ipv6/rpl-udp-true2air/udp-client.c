@@ -303,8 +303,10 @@ PROCESS_THREAD(udp_client_process, ev, data)
 //  etimer_set(&led_off, 50);
 
   bus_manager_register_i2c_isr(i2c_slave_data_isr);
-  bus_manager_init_i2c_slave(0x10);
+  bus_manager_init_i2c_slave(0x25);
   printf("[INFO] i2c slave listen initiated\n");
+
+  int pollInit = 0;
 #endif
 
   printf("[STATUS] listening to UDP communication\n");
@@ -319,15 +321,18 @@ PROCESS_THREAD(udp_client_process, ev, data)
     	etimer_reset(&periodic);
     	send_init_packet(0);
     }
+
 #ifndef SIMULATED
 //    if(etimer_expired(&led_off)){
 //    	leds_toggle(LEDS_RED);
 //    	etimer_reset(&led_off);
 //    }
     if(ev == PROCESS_EVENT_POLL) {
+    	printf("[POLLINIT] %d \n", ++pollInit);
     	init_tru2air_sensor_node();
     }
 #endif
+
   }
 
   PROCESS_END();

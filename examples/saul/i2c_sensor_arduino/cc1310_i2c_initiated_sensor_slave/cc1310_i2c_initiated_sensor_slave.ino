@@ -2,6 +2,7 @@
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
 
+#define TRU2AIR_MAIN_NODE_SLAVE_ADDR 0x25
 #define BME_SCK 13
 #define BME_MISO 12
 #define BME_MOSI 11
@@ -17,7 +18,13 @@ Adafruit_BME280 bme(BME_CS, BME_MOSI, BME_MISO,  BME_SCK);
 
 //STATES
 //communication states
-enum I2C_COMM_PROT_ACTION {GET_SENSACT_NUM, GET_SENSOR_NAME, GET_SENSOR_TYPE, SENS_ACT_READ, SENS_ACT_WRITE};
+enum I2C_COMM_PROT_ACTION {
+  GET_SENSACT_NUM, //0
+  GET_SENSOR_NAME, //1
+  GET_SENSOR_TYPE, //2
+  SENS_ACT_READ,   //3 
+  SENS_ACT_WRITE   //4
+};
 
 //SENSACT MESUREMENT DATA SIZE
 const unsigned char SENSACT_DATA_SIZE = 32;
@@ -54,34 +61,33 @@ typedef struct sensact_descriptor_t {
 //TEMPORARY DUMMY VARIABLES
 byte SENS_NUM = 0x03;
 unsigned int uint32_answer = 15;
-sensact_descriptor_t sensors[] = {{"BME280_PRESSURE", SENSACT_BME280_PRESSURE}, {"BME280_TEMP", SENSACT_BME280_TEMP}, {"BME280_HUM", SENSACT_BME280_HUMIDITY}};
+sensact_descriptor_t sensors[] = {{"TRU2AIR_RELAY", SENSACT_TRU2AIR_RELAY}};
 unsigned char device_addr[] = {0xde, 0xad, 0xbe, 0xef};
 
 
 void setup() {
   Serial.begin(9600);  // start serial for output
   
-  //Wire.begin(); // join i2c bus (address optional for master)
-  //initiating the BME driver
-
-  if (!bme.begin()) {
-    Serial.println("Could not find a valid BME280 sensor, check wiring!");
-    while (1);
-  } else { Serial.print("BME is workiasdssadng!\n");}
-
+  Wire.begin(); // join i2c bus (address optional for master)
+  
   // Starting the tru2air i2c protocol
-  Wire.beginTransmission(0x10); // transmit to device #8
+  Wire.beginTransmission(TRU2AIR_MAIN_NODE_SLAVE_ADDR); // transmit to device #8
   Wire.write(0xde);      
   Wire.write(0xad);      
   Wire.write(0xbe);      
   Wire.write(0xef);     
-  Wire.endTransmission(true);    // stop transmitting
-  Wire.requestFrom(0x10, 1,false);    // request 6 bytes from slave device #8 
+  Wire.endTransmission(false);    // stop transmitting
 
-  
-  while (Wire.available()) { // slave may send less than requested
-    I2C_SLAVE_ADDRESS = Wire.read(); // receive a byte as characterl
+  Wire.requestFrom(TRU2AIR_MAIN_NODE_SLAVE_ADDR, 1,false);    // request 6 bytes from slave device #8 
+
+//delay(50);  
+  while (!Wire.available()) { // slave may send less than requested 
+    ;
   }
+  
+  I2C_SLAVE_ADDRESS = Wire.read(); // receive a byte as characterl
+  
+  Wire.endTransmission(true);    // stop transmitting
   
   //TODO: handle when no proper i2c id was received
   
@@ -115,7 +121,7 @@ void receiveCb(int numBytes) {
   
   switch(HEADER.action) {
     case GET_SENSACT_NUM:
-      Serial.print("[STATE] -> GET_SENSACT_NUM \n");
+//      Serial.print("[STATE] -> GET_SENSACT_NUM \n");
       STATE = GET_SENSACT_NUM;
       break;
     case GET_SENSOR_NAME:
@@ -141,29 +147,23 @@ void receiveCb(int numBytes) {
 }
 
 void requestCb() {
-
-  Serial.print("[REQUEST]\n");
+//  Serial.print("[REQUEST]\n");
   bool endOfMsg = false;
 
-  //TODO:remove this
-  Wire.write(0xFA);
-  /*switch(STATE) {
+  switch(STATE) {
     case GET_SENSACT_NUM:
-    
-
-      Wire.write(device_addr, 4);
+      
       Wire.write(sizeof(sensors)/sizeof(sensact_descriptor_t));
-      Serial.println("NO FREEZE");
       break;
+      
     case GET_SENSOR_NAME:
       //TODO: handle bad HEADER
   
-      Wire.write((char*)(sensors[HEADER.specifier].name));
-      Wire.write('\0');
-      
+      Wire.write((char*)(sensors[HEADER.specifier].name), sizeof(sensors[HEADER.specifier].name));      
       break;
       
     case GET_SENSOR_TYPE:
+    
       //Serial.print(sizeof(sensors[HEADER.specifier].type));
       Wire.write((char*)(&sensors[HEADER.specifier].type),2);
       break;
@@ -175,6 +175,9 @@ void requestCb() {
       memset(SENSACT_MEASURE_RESULT, 0x00, SENSACT_DATA_SIZE);
       
       switch(HEADER.specifier) {
+        
+        /*
+        
         //pressure
         case 0:
           measurement = bme.readPressure();
@@ -202,13 +205,14 @@ void requestCb() {
           
         default:
           ;
+          */
       }
       
       break;      
 
     default:
       break;
-  }*/
+  }
 }
 
 void printHex4 (byte* data) {

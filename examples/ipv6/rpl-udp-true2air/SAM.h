@@ -10,7 +10,7 @@
 #define SENSACT_DATA_SIZE 32
 
 /* Defines */
-#define SAM_SENSACTS_MAX_NUM 127
+#define SAM_SENSACTS_MAX_NUM 10
 
 /* Enums */
 

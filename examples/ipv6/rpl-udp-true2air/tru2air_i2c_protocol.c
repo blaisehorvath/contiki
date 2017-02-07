@@ -9,6 +9,7 @@
 #include "tru2air_i2c_protocol.h"
 #include "bus_manager.h"
 #include "SAM.h"
+#include "clock.h"
 
 #ifndef SIMULATED
 
@@ -18,7 +19,8 @@ extern void i2c_slave_data_isr (); //TODO: init_tru2air_snesor_node should requi
 
 /* Globals */
 volatile  tru2air_sensor_node_t DEVICE = {0,0,0};
-volatile enum TRU2AIR_CLIENT_NODE_I2C_HANDLER_STATE STATE = I2C_SLAVE_LISTEN;
+volatile unsigned char STATE = I2C_SLAVE_LISTEN;
+volatile unsigned char ERROR = NO_I2C_ERROR;
 unsigned char currentSensor = 0; //TODO: reset on the proper place
 
 void init_tru2air_sensor_node(){
@@ -26,7 +28,10 @@ void init_tru2air_sensor_node(){
 	unsigned char headerBuff[2];
 	unsigned char nameBuff[23];
 	unsigned char typeBuff[2];
-	unsigned char sensactBuff[5];
+	unsigned char sensactBuff[1];
+
+	/* Timing variables */
+
 
 	while (!tru2air_sensor_device_inited) {
 		switch (STATE) {
@@ -40,12 +45,10 @@ void init_tru2air_sensor_node(){
 				/* Register I2C Slave Interrupt */
 				bus_manager_register_i2c_isr(i2c_slave_data_isr);
 
-				/* Inititng I2C SLAVE as 0x10  and  enabling the registered I2C Slave Interrupt */
-				bus_manager_init_i2c_slave(0x10);
+				/* Inititng I2C SLAVE as 0x25  and  enabling the registered I2C Slave Interrupt */
+				bus_manager_init_i2c_slave(0x25);
 
-				printf(
-						"[STATE] -> NODE_I2C_SLAVE_INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n",
-						DEVICE.i2c_addr, DEVICE.dev_addr);
+				printf("[STATE] -> NODE_I2C_SLAVE_INIT \n[INFO] sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
 				tru2air_sensor_device_inited = true;
 				break;
 
@@ -54,6 +57,8 @@ void init_tru2air_sensor_node(){
 				printf("[STATE] -> NODE_I2C_MASTER_INIT\n");
 
 				if (DEVICE.i2c_addr) {
+					/* Reset the sensact num buffer */
+					sensactBuff[0] = 0x00;
 
 					//Unregister the slave interrupt and turn off slave mode
 					I2CIntUnregister(I2C0_BASE);
@@ -66,13 +71,25 @@ void init_tru2air_sensor_node(){
 					// Wake up as master
 					board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
 					board_i2c_write_single(GET_SENSACT_NUM);
-					board_i2c_read(sensactBuff, 5); //TODO: error handling, check if the dev address is valid and maybe if the SENSACT num is >0?
-					DEVICE.sensact_num = sensactBuff[4];
-					currentSensor = 0;
+					clock_wait((int)CLOCK_SECOND/100);
+//					printf("[DEBUG] before i2c sensact num read %d \n", sensactBuff[0]);
+					board_i2c_read(sensactBuff, 1);
+//					printf("[DEBUG] after sensact num read: %d \n", sensactBuff[0]);
 					board_i2c_shutdown();
 
-					printf("[INFO] tru2air sensor node: 0x%08x has 0x%02x sensors\n",
-							DEVICE.dev_addr, DEVICE.sensact_num);
+					if (sensactBuff[0] == 0) {
+						STATE = I2C_SLAVE_LISTEN;
+					}
+					else if (sensactBuff[0] < 1 || sensactBuff[0] > SAM_SENSACTS_MAX_NUM) {
+						STATE = I2C_ERROR;
+						ERROR = I2C_RANGE_ERROR;
+						break;
+					}
+
+					DEVICE.sensact_num = sensactBuff[0];
+					currentSensor = 0;
+
+					printf("[INFO] tru2air sensor node: 0x%08x has 0x%02x sensors\n", DEVICE.dev_addr, DEVICE.sensact_num);
 
 					STATE = REQUIRE_SENSACT_NAME;
 				}
@@ -88,6 +105,7 @@ void init_tru2air_sensor_node(){
 
 				board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
 				board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_SIZE);
+				clock_wait((int)CLOCK_SECOND/100000);
 				board_i2c_read_until(nameBuff, '\0');
 				board_i2c_shutdown();
 
@@ -104,6 +122,7 @@ void init_tru2air_sensor_node(){
 
 				board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
 				board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_SIZE);
+				clock_wait((int)CLOCK_SECOND/100000);
 				board_i2c_read(typeBuff, 2);
 				board_i2c_shutdown();
 
@@ -129,16 +148,25 @@ void init_tru2air_sensor_node(){
 				if (++currentSensor == DEVICE.sensact_num) {
 					currentSensor = 0;
 					STATE = I2C_SLAVE_LISTEN;
+					printf("[SENSACTS INIT DONE]\n");
 				} else {
 					STATE = REQUIRE_SENSACT_NAME;
 				}
 
 				break;
 
+			case( I2C_ERROR ):
+
+				//TODO: CLEAR ERROR!!!!
+
+				tru2air_sensor_device_inited = true;
+				if (ERROR == I2C_RANGE_ERROR) printf("[RANGE ERROR]\n");
+				break;
+
+
 			default:
-				printf(
-						"[STATE] -> DEFAULT\n[INFO] tru2air sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n",
-						DEVICE.i2c_addr, DEVICE.dev_addr);
+				//printf("[STATE] -> DEFAULT\n[INFO] tru2air sensor node i2c_id: 0x%02x dev_addr: 0x%08x \n", DEVICE.i2c_addr, DEVICE.dev_addr);
+
 				break;
 		}
 	}
