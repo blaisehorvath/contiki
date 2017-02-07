@@ -80,7 +80,7 @@ void setup() {
 
   Wire.requestFrom(TRU2AIR_MAIN_NODE_SLAVE_ADDR, 1,false);    // request 6 bytes from slave device #8 
 
-//delay(50);  
+  //delay(50);  
   while (!Wire.available()) { // slave may send less than requested 
     ;
   }
