@@ -78,16 +78,14 @@ void setup() {
   Wire.write(0xef);     
   Wire.endTransmission(false);    // stop transmitting
 
-  Wire.requestFrom(TRU2AIR_MAIN_NODE_SLAVE_ADDR, 1,false);    // request 6 bytes from slave device #8 
+  Wire.requestFrom(TRU2AIR_MAIN_NODE_SLAVE_ADDR, 1,true);    // true means that repeated start is sent after the request
 
-  //delay(50);  
-  while (!Wire.available()) { // slave may send less than requested 
+  while (!Wire.available()) { //
     ;
   }
   
-  I2C_SLAVE_ADDRESS = Wire.read(); // receive a byte as characterl
+  I2C_SLAVE_ADDRESS = Wire.read(); // receive a byte as characterl //this read will be a Repeated start becouse of the Wire.requestFrom's true argument!!!!!
   
-  Wire.endTransmission(true);    // stop transmitting
   
   //TODO: handle when no proper i2c id was received
   
