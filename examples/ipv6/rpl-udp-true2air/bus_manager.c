@@ -2,9 +2,14 @@
 #include "bus_manager.h"
 #include <stdio.h>
 #include <string.h>
+#include "sys/ctimer.h"
 
 static uint8_t slave_addr;
 static uint8_t interface = NO_INTERFACE;
+
+void i2c_bus_checker(){
+    
+}
 
 void init_i2c_bus_manager () {
 
@@ -139,9 +144,9 @@ void bus_manager_disable_i2c_slave() {
 	//  ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SCL_HP);
 	//  ti_lib_ioc_io_port_pull_set(CC1310_IOID_SCL_HP, IOC_IOPULL_DOWN);
 	ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SDA);
-	ti_lib_ioc_io_port_pull_set(CC1310_IOID_SDA, IOC_IOPULL_UP);
+	ti_lib_ioc_io_port_pull_set(CC1310_IOID_SDA, IOC_NO_IOPULL);
 	ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SCL);
-	ti_lib_ioc_io_port_pull_set(CC1310_IOID_SCL, IOC_IOPULL_UP);
+	ti_lib_ioc_io_port_pull_set(CC1310_IOID_SCL, IOC_NO_IOPULL);
 }
 
 
@@ -224,9 +229,9 @@ void board_i2c_shutdown()
 //  ti_lib_ioc_io_port_pull_set(CC1310_IOID_SCL_HP, IOC_IOPULL_DOWN);
 
   ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SDA);
-  ti_lib_ioc_io_port_pull_set(CC1310_IOID_SDA, IOC_IOPULL_UP);
+  ti_lib_ioc_io_port_pull_set(CC1310_IOID_SDA, IOC_NO_IOPULL);
   ti_lib_ioc_pin_type_gpio_input(CC1310_IOID_SCL);
-  ti_lib_ioc_io_port_pull_set(CC1310_IOID_SCL, IOC_IOPULL_UP);
+  ti_lib_ioc_io_port_pull_set(CC1310_IOID_SCL, IOC_NO_IOPULL);
 }
 /*---------------------------------------------------------------------------*/
 bool board_i2c_write(uint8_t *data, uint8_t len)
@@ -328,6 +333,30 @@ bool board_i2c_read(uint8_t *data, uint8_t len)
   return success;
 }
 
+
+bool board_i2c_read_single(uint8_t *data)
+{
+  bool success = true;
+
+  /* Set slave address */
+  ti_lib_i2c_master_slave_addr_set(I2C0_BASE, slave_addr, true);
+
+  /* Check if another master has access */
+  while(ti_lib_i2c_master_bus_busy(I2C0_BASE));
+
+  /* Assert RUN + START + ACK */
+  if(success) {
+    ti_lib_i2c_master_control(I2C0_BASE, I2C_MASTER_CMD_SINGLE_RECEIVE);
+    while(ti_lib_i2c_master_busy(I2C0_BASE));
+    success = i2c_status();
+    if(success) {
+      *data = ti_lib_i2c_master_data_get(I2C0_BASE);
+      while(ti_lib_i2c_master_bus_busy(I2C0_BASE));
+    }
+  }
+
+  return success;
+}
 void board_i2c_wakeup()
 {
   /* First, make sure the SERIAL PD is on */
@@ -342,7 +371,7 @@ void board_i2c_wakeup()
 
   /* Enable and initialize the I2C master module */
   ti_lib_i2c_master_init_exp_clk(I2C0_BASE, ti_lib_sys_ctrl_clock_get(),
-                                 true);
+                                 false);
 }
 void board_i2c_select(uint8_t new_interface, uint8_t address)
 {

@@ -14,7 +14,7 @@
 #include "clock.h"
 #include "sys/etimer.h"
 
-uint16_t black_magic_waiting_time = 1000;
+uint16_t black_magic_waiting_time = 100000000;
 
 /* Temporary Variables */
 extern void i2c_slave_data_isr (); //TODO: init_tru2air_snesor_node should require a function pointer to this instead of extern
@@ -54,7 +54,6 @@ void init_tru2air_sensor_node(){
 				break;
 
 			case (NODE_I2C_MASTER_INIT):
-
 				printf("[STATE] -> NODE_I2C_MASTER_INIT\n");
 
 				if (DEVICE.i2c_addr) {
@@ -78,8 +77,8 @@ void init_tru2air_sensor_node(){
 
 					/* GET SENSACT NUM */
 					board_i2c_write_single(GET_SENSACT_NUM);
-					clock_delay_usec(black_magic_waiting_time);
-					board_i2c_read(&sensactBuff, 1);
+					//clock_delay_usec(black_magic_waiting_time);
+					printf("read retval:%d\n",board_i2c_read_single(&sensactBuff));
 					board_i2c_shutdown();
 
 
@@ -113,7 +112,7 @@ void init_tru2air_sensor_node(){
 
 				board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
 				board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_SIZE);
-				clock_delay_usec(black_magic_waiting_time);
+				//clock_delay_usec(black_magic_waiting_time);
 				board_i2c_read_until(nameBuff, '\0');
 				board_i2c_shutdown();
 
@@ -130,7 +129,6 @@ void init_tru2air_sensor_node(){
 
 				board_i2c_select(BOARD_I2C_INTERFACE_0, DEVICE.i2c_addr);
 				board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_SIZE);
-				clock_delay_usec(black_magic_waiting_time);
 				board_i2c_read(typeBuff, 2);
 				board_i2c_shutdown();
 

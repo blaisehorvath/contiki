@@ -88,14 +88,14 @@ void setup() {
   
   
   //TODO: handle when no proper i2c id was received
-  
+    Wire.onReceive(receiveCb);
+  Wire.onRequest(requestCb);
   Wire.begin(I2C_SLAVE_ADDRESS);
   //Serial.print("[I2C SLAVE] Started i2c slave on: ");
   //printHex4(&I2C_SLAVE_ADDRESS);
   //Serial.print("\n");
   
-  Wire.onReceive(receiveCb);
-  Wire.onRequest(requestCb);
+
 }
 
 void loop() {
@@ -119,7 +119,7 @@ void receiveCb(int numBytes) {
   
   switch(HEADER.action) {
     case GET_SENSACT_NUM:
-//      Serial.print("[STATE] -> GET_SENSACT_NUM \n");
+      Serial.print("[STATE] -> GET_SENSACT_NUM \n");
       STATE = GET_SENSACT_NUM;
       break;
     case GET_SENSOR_NAME:

@@ -69,6 +69,7 @@
 #define BL_PIN_NUMBER = 0x0B
 #define BL_ENABLE = 0xC5
 
+#define I2C_WAIT_INTERVAL (1)
 static struct uip_udp_conn *client_conn;
 static uip_ipaddr_t server_ipaddr;
 
@@ -227,6 +228,7 @@ set_global_address(void)
 PROCESS_THREAD(udp_client_process, ev, data)
 {
   static struct etimer periodic;
+  static struct ctimer i2cfasz;
 #ifndef SIMULATED
   static struct etimer led_off;
 #endif
@@ -317,7 +319,10 @@ PROCESS_THREAD(udp_client_process, ev, data)
     }
     if(etimer_expired(&periodic) && !node_is_initialized()){
     	etimer_reset(&periodic);
-    	send_init_packet(0);
+    	//send_init_packet(0);
+    }
+    if(ev == PROCESS_EVENT_POLL) {
+        ctimer_set(&i2cfasz, I2C_WAIT_INTERVAL,init_tru2air_sensor_node, NULL);
     }
 
 #ifndef SIMULATED
@@ -325,9 +330,6 @@ PROCESS_THREAD(udp_client_process, ev, data)
 //    	leds_toggle(LEDS_RED);
 //    	etimer_reset(&led_off);
 //    }
-    if(ev == PROCESS_EVENT_POLL) {
-    	init_tru2air_sensor_node();
-    }
 #endif
 
   }
