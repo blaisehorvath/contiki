@@ -56,6 +56,7 @@ typedef struct tru2air_sensor_node_t {
  *  Functions
  */
 void init_tru2air_sensor_node();
+void i2c_bus_checker(void);
 #endif
 
 #endif /* EXAMPLES_SAUL_TRU2AIR_I2C_COM_H_ */

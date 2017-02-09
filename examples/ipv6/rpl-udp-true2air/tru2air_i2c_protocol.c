@@ -25,6 +25,31 @@ volatile unsigned char STATE = I2C_SLAVE_LISTEN;
 volatile unsigned char ERROR = NO_I2C_ERROR;
 unsigned char currentSensor = 0; //TODO: reset on the proper place
 
+void i2c_bus_checker(){
+	printf("in bus checker %d\n",STATE);
+	uint8_t sensactBuff, i,retvalread,retvalwrite;
+	for (i = 8; i< I2C_BUS_ADDRESS_RANGE; i++){
+		if(i2c_devices[i]){
+			printf("%d device exsists \n",i);
+			board_i2c_select(BOARD_I2C_INTERFACE_0, i);
+			retvalwrite = board_i2c_write_single(GET_SENSACT_NUM);
+			sensactBuff = 0;
+			retvalread = board_i2c_read_single(&sensactBuff); // TODO: Check return value too.
+			if(!retvalwrite || (!sensactBuff && retvalread)){
+				printf("%d device deleted \n",i);
+				sam_del_device(i2c_devices[i]);
+				i2c_devices[i] = 0;
+				// TODO: unregister device from SAM and i2c_devices
+			}
+			board_i2c_shutdown();
+		}
+	}
+	/* Register I2C Slave Interrupt */
+	bus_manager_register_i2c_isr(i2c_slave_data_isr);
+	/* Inititng I2C SLAVE as 0x25  and  enabling the registered I2C Slave Interrupt */
+	bus_manager_init_i2c_slave(0x25);
+}
+
 void init_tru2air_sensor_node(){
 	bool tru2air_sensor_device_inited = false;
 	unsigned char headerBuff[2];
@@ -33,8 +58,6 @@ void init_tru2air_sensor_node(){
 	unsigned char sensactBuff;
 
 	/* Timing variables */
-
-
 	while (!tru2air_sensor_device_inited) {
 		switch (STATE) {
 

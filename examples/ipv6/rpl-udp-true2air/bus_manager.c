@@ -3,13 +3,11 @@
 #include <stdio.h>
 #include <string.h>
 #include "sys/ctimer.h"
+#include "SAM.h"
+extern void i2c_slave_data_isr ();
 
 static uint8_t slave_addr;
 static uint8_t interface = NO_INTERFACE;
-
-void i2c_bus_checker(){
-    
-}
 
 void init_i2c_bus_manager () {
 
