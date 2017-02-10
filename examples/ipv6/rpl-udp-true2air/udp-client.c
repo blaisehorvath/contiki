@@ -69,7 +69,7 @@
 #define BL_PIN_NUMBER = 0x0B
 #define BL_ENABLE = 0xC5
 
-#define I2C_WAIT_INTERVAL (1)
+#define I2C_WAIT_INTERVAL (CLOCK_SECOND/10)
 #define I2C_CHECK_INTERVAL (CLOCK_SECOND/10)
 static struct uip_udp_conn *client_conn;
 static uip_ipaddr_t server_ipaddr;
@@ -328,7 +328,7 @@ etimer_set(&i2cCheck, I2C_CHECK_INTERVAL);
         ctimer_set(&i2cfasz, I2C_WAIT_INTERVAL,init_tru2air_sensor_node, NULL);
     }
     if(etimer_expired(&i2cCheck)){
-    i2c_bus_checker();
+    //i2c_bus_checker();
     etimer_reset(&i2cCheck);
     }
 #ifndef SIMULATED

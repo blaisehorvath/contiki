@@ -8,13 +8,15 @@
 
 #ifndef EXAMPLES_SAUL_TRU2AIR_I2C_COM_H_
 #define EXAMPLES_SAUL_TRU2AIR_I2C_COM_H_
-
+#include <stdbool.h>
+#include <stdint.h>
 enum TRU2AIR_I2C_HEADER_ACTION {
 	GET_SENSACT_NUM,
 	GET_SENSOR_NAME,
 	GET_SENSOR_TYPE,
 	SENS_ACT_READ,
-	SENS_ACT_WRITE
+	SENS_ACT_WRITE,
+	CHECK_ALIVE
 };
 
 enum TRU2AIR_CLIENT_NODE_I2C_HANDLER_STATE {
@@ -50,13 +52,24 @@ typedef struct tru2air_sensor_node_t {
     unsigned char i2c_addr;
     unsigned char sensact_num;
 } tru2air_sensor_node_t;
-
+// buffer in Wire.h should be set accordingly, default is 32... both in wire and twi.
+typedef struct i2c_pkt_t {
+	uint32_t dev_id;
+	enum TRU2AIR_I2C_HEADER_ACTION action;
+	enum TRU2AIR_I2C_ERROR error;
+	unsigned char data[32];
+	uint16_t CRC;
+} i2c_pkt_t;
 #ifndef SIMULATED
 /*
  *  Functions
  */
 void init_tru2air_sensor_node();
 void i2c_bus_checker(void);
+bool bus_manager_exchange_pkts(i2c_pkt_t* pkt_out, i2c_pkt_t* pkt_in,uint8_t address);
+void convertLEToBE4 (uint32_t* from, uint32_t* to);
+uint32_t convertLEToBE4Return (uint32_t* from);
+uint16_t crc16(uint8_t* data_p, uint8_t length);
 #endif
 
 #endif /* EXAMPLES_SAUL_TRU2AIR_I2C_COM_H_ */

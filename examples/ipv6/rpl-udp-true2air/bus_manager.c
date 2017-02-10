@@ -23,7 +23,6 @@ void bus_manager_clear_i2c_slave_data_int () {
 
 	(void)I2CSlaveDataGet(I2C0_BASE);
 }
-
 void bus_manager_r_sensact(sensact_descriptor_t* sensact, sensact_rw_result_t* result) {
 
 	uint8_t i2c_addr = bus_manager_get_sensact_i2c_id(&sensact->dev_id);
@@ -37,7 +36,7 @@ void bus_manager_r_sensact(sensact_descriptor_t* sensact, sensact_rw_result_t* r
 	board_i2c_shutdown();
 }
 
-void bus_manager_w_sensact(sensact_descriptor_t* sensact, unsigned int* toWrite, sensact_rw_result_t* result) {
+void bus_manager_w_sensact(sensact_descriptor_t* sensact, char* toWrite, sensact_rw_result_t* result) {
 
 	unsigned char i2c_addr = bus_manager_get_sensact_i2c_id(&sensact->dev_id);
 
@@ -45,10 +44,10 @@ void bus_manager_w_sensact(sensact_descriptor_t* sensact, unsigned int* toWrite,
 		unsigned char outBuff[2 + sizeof(int)];
 		outBuff[0] = SENS_ACT_WRITE;
 		outBuff[1] = sensact->sensact_id;
-		memcpy((char*) &outBuff[2], (char*) toWrite, 2+sizeof(int));
+		memcpy((char*) &outBuff[2],  toWrite, SENSACT_DATA_SIZE);
 
 		board_i2c_select(BOARD_I2C_INTERFACE_0, i2c_addr);
-		board_i2c_write(outBuff, 2 + sizeof(int));
+		board_i2c_write(outBuff, 2 + SENSACT_DATA_SIZE);
 		board_i2c_shutdown();
 
 		result->data[0] = 0;
