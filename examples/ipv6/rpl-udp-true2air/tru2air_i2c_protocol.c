@@ -154,8 +154,8 @@ void init_tru2air_sensor_node(){
 					out_pkt.dev_id= DEVICE.dev_addr;
 					out_pkt.error = 5;
 					//out_pkt.CRC = crc16(((uint8_t*)(&out_pkt)), sizeof(i2c_pkt_t)- sizeof(uint16_t));
-					bus_manager_exchange_pkts(&out_pkt,&in_pkt,DEVICE.i2c_addr);
 					testSum++;
+					if(!bus_manager_exchange_pkts(&out_pkt,&in_pkt,DEVICE.i2c_addr)) {printf("error in the bus somewhere!!!");board_i2c_shutdown(); STATE = I2C_SLAVE_LISTEN; break;}
 					if (in_pkt.CRC == crc16((uint8_t *)&in_pkt, sizeof(i2c_pkt_t)- sizeof(uint16_t)))
 						testGood++;
 					printf("testGood: %d, testSum:%d \n",testGood,testSum);
