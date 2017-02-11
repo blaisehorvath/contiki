@@ -168,76 +168,69 @@ void init_tru2air_sensor_node() {
 
                     testSum++;
                     if (!bus_manager_exchange_pkts(&out_pkt, &in_pkt, DEVICE.i2c_addr)) {
-                        //TODO: ERRORRRRR state
-                        printf("error in the bus somewhere!!!");
-                        board_i2c_shutdown();
-                        STATE = I2C_SLAVE_LISTEN;
+                        ERROR = I2C_SENSACT_NUM_ERROR;
+                        STATE = I2C_ERROR;
                         break;
                     }
-                    if (in_pkt.CRC == crc16((uint8_t * ) & in_pkt, sizeof(i2c_pkt_t) - sizeof(uint16_t)))
-                        {
-                            testGood++;
-                            DEVICE.sensact_num = in_pkt.data[0];//TODO: Should be mapped with a struct both here and on arduino.
-                            currentSensor = 0;
-                            printf("[INFO] tru2air sensor node: 0x%08x has 0x%02x sensors\n\n", DEVICE.dev_addr,
-                                   DEVICE.sensact_num);
-                            //printI2CPkt(&in_pkt);
-                            STATE = REQUIRE_SENSACT_NAME;
-                        }
-                    else {
-                        STATE = NODE_I2C_MASTER_INIT;//TODO: So many todos...
+                    if (in_pkt.CRC == crc16((uint8_t * ) & in_pkt, sizeof(i2c_pkt_t) - sizeof(uint16_t))) {
+                        DEVICE.sensact_num = in_pkt.data[0];//TODO: Should be mapped with a struct both here and on arduino.
+                        currentSensor = 0;
+                        printf("[INFO] tru2air sensor node: 0x%08x has 0x%02x sensors\n\n", DEVICE.dev_addr,
+                               DEVICE.sensact_num);
+                        STATE = REQUIRE_SENSACT_NAME;
                     }
-                    printf("testGood: %d, testSum:%d \n", testGood, testSum);
+                    else {
+                        ERROR = I2C_CRC_ERROR;//TODO: So many todos...
+                        STATE = I2C_ERROR;
+                        break;
+                    }
 
                 }
                 break;
             case (REQUIRE_SENSACT_NAME):
                 printf("[STATE] -> GET_SENSOR_NAME\n");
-                for  (i = 0; i< sizeof(i2c_pkt_t);i++) ((char*)(&out_pkt))[i] = 0;//zero out.
+                for (i = 0; i < sizeof(i2c_pkt_t); i++) ((char *) (&out_pkt))[i] = 0;//zero out.
                 out_pkt.action = GET_SENSOR_NAME;
                 out_pkt.data[0] = currentSensor;
 
                 if (!bus_manager_exchange_pkts(&out_pkt, &in_pkt, DEVICE.i2c_addr)) {
-                    //TODO: ERRORRRRR state
-                    printf("error in the bus somewhere!!!");
-                    board_i2c_shutdown();
-                    STATE = I2C_SLAVE_LISTEN;
+                    ERROR = I2C_GET_SENSOR_NAME_ERROR;
+                    STATE = I2C_ERROR;
                     break;
                 }
-                if (in_pkt.CRC == crc16((uint8_t * ) & in_pkt, sizeof(i2c_pkt_t) - sizeof(uint16_t)))
-                {
+                if (in_pkt.CRC == crc16((uint8_t * ) & in_pkt, sizeof(i2c_pkt_t) - sizeof(uint16_t))) {
                     strcpy(nameBuff, in_pkt.data);
                     STATE = REQUIRE_SENSOR_RETURN_TYPE; //TODO: Continue from here
                 }
                 else {
-                    STATE = NODE_I2C_MASTER_INIT;//TODO: So many todos...
+                    ERROR = I2C_CRC_ERROR;
+                    STATE = I2C_ERROR;
+                    break;
                 }
                 break;
 
 
-                
             case (REQUIRE_SENSOR_RETURN_TYPE):
                 printf("[STATE] -> GET_SENSOR_TYPE\n");
 
-                for  (i = 0; i< sizeof(i2c_pkt_t);i++) ((char*)(&out_pkt))[i] = 0;//zero out.
+                for (i = 0; i < sizeof(i2c_pkt_t); i++) ((char *) (&out_pkt))[i] = 0;//zero out.
                 out_pkt.action = GET_SENSOR_TYPE;
                 out_pkt.data[0] = currentSensor;
 
                 if (!bus_manager_exchange_pkts(&out_pkt, &in_pkt, DEVICE.i2c_addr)) {
-                    //TODO: ERRORRRRR state
-                    printf("error in the bus somewhere!!!");
-                    board_i2c_shutdown();
-                    STATE = I2C_SLAVE_LISTEN;
+                    ERROR = I2C_GET_SENSOR_TYPE_ERROR;
+                    STATE = I2C_ERROR;
                     break;
                 }
-                if (in_pkt.CRC == crc16((uint8_t * ) & in_pkt, sizeof(i2c_pkt_t) - sizeof(uint16_t)))
-                {
+                if (in_pkt.CRC == crc16((uint8_t * ) & in_pkt, sizeof(i2c_pkt_t) - sizeof(uint16_t))) {
                     typeBuff[0] = in_pkt.data[1];
                     typeBuff[1] = in_pkt.data[0]; //TODO:BELE
                     STATE = REQUIRE_SENSOR_RETURN_TYPE; //TODO: Continue from here
                 }
                 else {
-                    STATE = NODE_I2C_MASTER_INIT;//TODO: So many todos...
+                    ERROR = I2C_CRC_ERROR;
+                    STATE = I2C_ERROR;
+                    break;
                 }
 
                 printf("[GOT SENSACT] Name: %s Type: 0x%04x \n", nameBuff, *(uint16_t *) typeBuff);
@@ -245,7 +238,6 @@ void init_tru2air_sensor_node() {
                 break;
 
             case (REGISTER_TO_SAM):
-
                 printf("[STATE] -> REGISTER_TO_SAM\n");
                 sensact_descriptor_t new_sensact;
 
@@ -258,6 +250,9 @@ void init_tru2air_sensor_node() {
 
                 sam_add_sensact(new_sensact);
 
+                testGood++;
+                printf("testGood: %d, testSum:%d \n", testGood, testSum);
+
                 if (++currentSensor == DEVICE.sensact_num) {
                     currentSensor = 0;
                     STATE = I2C_SLAVE_LISTEN;
@@ -265,7 +260,6 @@ void init_tru2air_sensor_node() {
                 } else {
                     STATE = REQUIRE_SENSACT_NAME;
                 }
-
                 break;
             case (I2C_ERROR):
 
@@ -283,10 +277,25 @@ void init_tru2air_sensor_node() {
                         STATE = I2C_SLAVE_LISTEN;
                         printf("[ERROR] I2C SENSACT NUM ERROR\n");
                         break;
+                    case (I2C_CRC_ERROR):
+                        ERROR = NO_I2C_ERROR;
+                        STATE = I2C_SLAVE_LISTEN;
+                        printf("[ERROR] I2C CRC ERROR\n");
+                        break;
+                    case (I2C_GET_SENSOR_NAME_ERROR):
+                        ERROR = NO_I2C_ERROR;
+                        STATE = I2C_SLAVE_LISTEN;
+                        printf("[ERROR] I2C CRC ERROR\n");
+                        break;
+                    case (I2C_GET_SENSOR_TYPE_ERROR):
+                        ERROR = NO_I2C_ERROR;
+                        STATE = I2C_SLAVE_LISTEN;
+                        printf("[ERROR] I2C CRC ERROR\n");
+                        break;
 
                     default:;
                 }
-
+                board_i2c_shutdown();
                 break;
         }
     }

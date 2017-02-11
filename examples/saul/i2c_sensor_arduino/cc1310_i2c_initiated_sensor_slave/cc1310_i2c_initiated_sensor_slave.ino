@@ -127,14 +127,16 @@ void setup() {
     printHex4(&I2C_SLAVE_ADDRESS);
     Serial.print("\n");
 }
-
+int resCntr = 0;
 void loop() {
-    //if(resetVal) {resetVal = 0; delay(10);setup();};
+    if(resetVal) {Serial.println("Should reset??");resetVal = 0; delay(10);setup();};
+    delay(10);
+    if(resCntr++ > 50) {Serial.println("Should reset by rescntr??");resCntr = 0; setup();}
+    //Serial.println(resCntr);
 }
 
 void receiveCb(int numBytes) {
-    Serial.print("numbYtes:");
-    Serial.println(numBytes);
+    resCntr = 0;
     i2c_pkt_t *pkt;
     uint8_t receivedData[sizeof(i2c_pkt_t)];
     int i = 0;
@@ -171,6 +173,7 @@ void receiveCb(int numBytes) {
 }
 
 void requestCb() {
+    resCntr = 0;
     Serial.print("[REQUEST]\n");
     i2c_pkt_t pkt;
     pkt = lastReceivedPkt;
@@ -192,8 +195,10 @@ void requestCb() {
             break;
 
         case GET_SENSOR_TYPE:
+            Serial.println("get sensor type");
             for(i = 0; i < 2; i++) pkt.data[i] = ((uint8_t*)( &sensors[lastReceivedPkt.data[0]].type))[i];
             //Wire.write((char *) (&sensors[HEADER.specifier].type), 2);
+            resetVal = 1;
             break;
         case SENS_ACT_WRITE:
             break;
@@ -245,7 +250,6 @@ void requestCb() {
     pkt.CRC = crc16((uint8_t * ) & pkt, sizeof(i2c_pkt_t) - sizeof(uint16_t));
     Wire.write((uint8_t * ) & pkt, sizeof(i2c_pkt_t));
     Serial.print("[END OF REQUEST]\n");
-    resetVal = 1;
 }
 
 void printHex4(byte *data) {
