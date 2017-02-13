@@ -88,8 +88,64 @@ bool bus_manager_exchange_pkts(i2c_pkt_t *pkt_out, i2c_pkt_t *pkt_in, uint8_t i2
     return true;
 }
 
-volatile int testSum = 0;
-volatile int testGood = 0;
+bool bus_manager_r_sensact(sensact_descriptor_t* sensact, uint8_t* resultData) {
+
+    uint8_t i2c_addr = bus_manager_get_sensact_i2c_id(&sensact->dev_id);
+    i2c_pkt_t in_pkt = {0, 0, 0,
+                        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0}, 0};
+    i2c_pkt_t out_pkt = {0, 0, 0,
+                         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                          0}, 0};
+    out_pkt.action=SENS_ACT_READ;
+    out_pkt.data[0] = sensact->sensact_id;
+
+    I2CIntUnregister(I2C0_BASE);
+    bus_manager_disable_i2c_slave();
+
+    if(!bus_manager_exchange_pkts(&out_pkt, &in_pkt, i2c_addr)){
+        printf("error in read sensact\n");
+        board_i2c_shutdown();
+    }
+
+    /* Register I2C Slave Interrupt */
+    bus_manager_register_i2c_isr(i2c_slave_data_isr);
+
+    /* Inititng I2C SLAVE as 0x25  and  enabling the registered I2C Slave Interrupt */
+    bus_manager_init_i2c_slave(0x25);
+
+    //unsigned char headerBuff[2] = {SENS_ACT_READ, sensact->sensact_id};
+    //unsigned char resultBuff[32];
+
+    //board_i2c_select(BOARD_I2C_INTERFACE_0, i2c_addr);
+    //board_i2c_write(headerBuff, TRU2AIR_HEADER_BUFF_SIZE);
+    //board_i2c_read(result->data, SENSACT_DATA_SIZE);
+    //board_i2c_shutdown();
+}
+
+bool bus_manager_w_sensact(sensact_descriptor_t* sensact, uint8_t* writeData, uint8_t* resultData) {
+    return true;
+    /*unsigned char i2c_addr = bus_manager_get_sensact_i2c_id(&sensact->dev_id);
+
+    if (i2c_addr > 0 && i2c_addr <= I2C_BUS_ADDRESS_RANGE) {
+        unsigned char outBuff[2 + sizeof(int)];
+        outBuff[0] = SENS_ACT_WRITE;
+        outBuff[1] = sensact->sensact_id;
+        memcpy((char*) &outBuff[2],  toWrite, SENSACT_DATA_SIZE);
+
+        //board_i2c_select(BOARD_I2C_INTERFACE_0, i2c_addr);
+        //board_i2c_write(outBuff, 2 + SENSACT_DATA_SIZE);
+        //board_i2c_shutdown();
+
+        result->data[0] = 0;
+        result->err = NO_SENSACT_ERROR;
+    } else {
+        result->data[0] = 0;
+        result->err = SENSACT_MISSING;
+    }*/
+
+}
+
 
 void i2c_bus_checker() {
     //printf("in bus checker %d\n",STATE);
@@ -123,6 +179,9 @@ bool errorHandler(bool error, unsigned char errorType) {
     }
     return error;
 }
+
+volatile int testSum = 0;
+volatile int testGood = 0;
 
 void init_tru2air_sensor_node() {
     int i;
@@ -223,8 +282,8 @@ void init_tru2air_sensor_node() {
                     break;
                 }
                 if (in_pkt.CRC == crc16((uint8_t * ) & in_pkt, sizeof(i2c_pkt_t) - sizeof(uint16_t))) {
-                    typeBuff[0] = in_pkt.data[1];
-                    typeBuff[1] = in_pkt.data[0]; //TODO:BELE
+                    typeBuff[0] = in_pkt.data[0];
+                    typeBuff[1] = in_pkt.data[1]; //TODO:BELE whhaaaat???
                     STATE = REQUIRE_SENSOR_RETURN_TYPE; //TODO: Continue from here
                 }
                 else {

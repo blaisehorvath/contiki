@@ -97,7 +97,7 @@ i2c_pkt_t lastReceivedPkt;
 int resetVal = 0;
 
 void setup() {
-
+//TODO: when prints removed it doesnt reset?? Why??
     Serial.begin(9600);  // start serial for output
     Serial.println(sizeof(i2c_pkt_t));
     Wire.begin(); // join i2c bus (address optional for master)
@@ -129,9 +129,9 @@ void setup() {
 }
 int resCntr = 0;
 void loop() {
-    if(resetVal) {Serial.println("Should reset??");resetVal = 0; delay(10);setup();};
-    delay(10);
-    if(resCntr++ > 50) {Serial.println("Should reset by rescntr??");resCntr = 0; setup();}
+    //if(resetVal) {Serial.println("Should reset??");resetVal = 0; delay(10);setup();};
+    //delay(10);
+    //if(resCntr++ > 50) {Serial.println("Should reset by rescntr??");resCntr = 0; setup();}
     //Serial.println(resCntr);
 }
 
@@ -143,21 +143,21 @@ void receiveCb(int numBytes) {
     for (i = 0; i < numBytes; i++) receivedData[i] = Wire.read();
     pkt = (i2c_pkt_t *) receivedData;
     printI2CPkt(pkt);
-    if (pkt->CRC == crc16((uint8_t *) pkt, sizeof(i2c_pkt_t) - sizeof(uint16_t)))
+    /*if (pkt->CRC == crc16((uint8_t *) pkt, sizeof(i2c_pkt_t) - sizeof(uint16_t)))
         Serial.println("Good pkt");
-    else Serial.println("Bad pkt"); //TODO: Check device ID TOO!!
+    else Serial.println("Bad pkt"); //TODO: Check device ID TOO!!*/
     lastReceivedPkt = *pkt;
     switch (pkt->action) {
         case GET_SENSACT_NUM:
-            Serial.print("[STATE] -> GET_SENSACT_NUM \n");
+            //Serial.print("[STATE] -> GET_SENSACT_NUM \n");
             STATE = GET_SENSACT_NUM;
             break;
         case GET_SENSOR_NAME:
-            Serial.print("[STATE] -> GET_SENSOR_NAME \n");
+            //Serial.print("[STATE] -> GET_SENSOR_NAME \n");
             STATE = GET_SENSOR_NAME;
             break;
         case GET_SENSOR_TYPE:
-            Serial.print("[STATE] -> GET_SENSOR_TYPE");
+            //Serial.print("[STATE] -> GET_SENSOR_TYPE");
             STATE = GET_SENSOR_TYPE;
             break;
 

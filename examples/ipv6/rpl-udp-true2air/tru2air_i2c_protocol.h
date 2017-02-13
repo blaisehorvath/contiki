@@ -10,6 +10,7 @@
 #define EXAMPLES_SAUL_TRU2AIR_I2C_COM_H_
 #include <stdbool.h>
 #include <stdint.h>
+#include "SAM.h"
 enum TRU2AIR_I2C_HEADER_ACTION {
 	GET_SENSACT_NUM,
 	GET_SENSOR_NAME,
@@ -73,6 +74,8 @@ bool bus_manager_exchange_pkts(i2c_pkt_t* pkt_out, i2c_pkt_t* pkt_in,uint8_t add
 void convertLEToBE4 (uint32_t* from, uint32_t* to);
 uint32_t convertLEToBE4Return (uint32_t* from);
 uint16_t crc16(uint8_t* data_p, uint8_t length);
+bool bus_manager_r_sensact(sensact_descriptor_t* sensact, uint8_t* resultData);
+bool bus_manager_w_sensact(sensact_descriptor_t* sensact, uint8_t* writeData, uint8_t* resultData);
 #endif
 
 #endif /* EXAMPLES_SAUL_TRU2AIR_I2C_COM_H_ */

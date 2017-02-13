@@ -322,7 +322,7 @@ etimer_set(&i2cCheck, I2C_CHECK_INTERVAL);
     }
     if(etimer_expired(&periodic) && !node_is_initialized()){
     	etimer_reset(&periodic);
-    	//send_init_packet(0);
+    	send_init_packet(0);
     }
     if(ev == PROCESS_EVENT_POLL) {
         ctimer_set(&i2cfasz, I2C_WAIT_INTERVAL,init_tru2air_sensor_node, NULL);
