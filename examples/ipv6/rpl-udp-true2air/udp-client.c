@@ -70,7 +70,7 @@
 #define BL_ENABLE = 0xC5
 
 #define I2C_WAIT_INTERVAL (CLOCK_SECOND/10)
-#define I2C_CHECK_INTERVAL (CLOCK_SECOND/10)
+#define I2C_CHECK_INTERVAL (CLOCK_SECOND/2)
 static struct uip_udp_conn *client_conn;
 static uip_ipaddr_t server_ipaddr;
 
@@ -320,15 +320,15 @@ send_init_packet(0);
     if(ev == tcpip_event) {
       tcpip_handler();
     }
-    if(etimer_expired(&periodic) && !node_is_initialized()){
+    if(etimer_expired(&periodic)){
     	etimer_reset(&periodic);
-    	send_init_packet(0);
+    if(!node_is_initialized()) send_init_packet(0); //So we can send again if we set it back.
     }
     if(ev == PROCESS_EVENT_POLL) {
         ctimer_set(&i2cfasz, I2C_WAIT_INTERVAL,init_tru2air_sensor_node, NULL);
     }
     if(etimer_expired(&i2cCheck)){
-    //i2c_bus_checker();
+    i2c_bus_checker();
     etimer_reset(&i2cCheck);
     }
 #ifndef SIMULATED

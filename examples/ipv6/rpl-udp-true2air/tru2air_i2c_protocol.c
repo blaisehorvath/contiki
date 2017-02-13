@@ -15,6 +15,8 @@
 #include "clock.h"
 #include "sys/etimer.h"
 
+#define CHECK_ALIVE_TIMES 3
+
 /* Temporary Variables */
 extern void i2c_slave_data_isr(); //TODO: init_tru2air_snesor_node should require a function pointer to this instead of extern
 
@@ -87,23 +89,23 @@ bool bus_manager_exchange_pkts(i2c_pkt_t *pkt_out, i2c_pkt_t *pkt_in, uint8_t i2
     return true;
 }
 
-bool bus_manager_r_sensact(sensact_descriptor_t* sensact, sensact_rw_result_t* result) {
+bool bus_manager_r_sensact(sensact_descriptor_t *sensact, sensact_rw_result_t *result) {
     printf("Reading sensact!!!\n");
     result->err = NO_SENSACT_ERROR;
     uint8_t i2c_addr = bus_manager_get_sensact_i2c_id(&sensact->dev_id);
-    i2c_pkt_t in_pkt = {0,{0,0}, 0, 0,
+    i2c_pkt_t in_pkt = {0, {0, 0}, 0, 0,
                         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                          0}, 0};
-    i2c_pkt_t out_pkt = {0,{0,0}, 0, 0,
+    i2c_pkt_t out_pkt = {0, {0, 0}, 0, 0,
                          {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                           0}, 0};
-    out_pkt.action=SENS_ACT_READ;
+    out_pkt.action = SENS_ACT_READ;
     out_pkt.sensact_id[0] = sensact->sensact_id;
 
     I2CIntUnregister(I2C0_BASE);
     bus_manager_disable_i2c_slave();
 
-    if(!bus_manager_exchange_pkts(&out_pkt, &in_pkt, i2c_addr)){
+    if (!bus_manager_exchange_pkts(&out_pkt, &in_pkt, i2c_addr)) {
         printf("error in read sensact\n");
         board_i2c_shutdown();
         result->err = I2C_ERROR;
@@ -116,28 +118,28 @@ bool bus_manager_r_sensact(sensact_descriptor_t* sensact, sensact_rw_result_t* r
     return true;
 }
 
-bool bus_manager_w_sensact(sensact_descriptor_t* sensact, uint8_t* writeData, sensact_rw_result_t* result) {
+bool bus_manager_w_sensact(sensact_descriptor_t *sensact, uint8_t *writeData, sensact_rw_result_t *result) {
     printf("Writing sensact!!!\n");
     result->err = NO_SENSACT_ERROR;
     uint8_t i2c_addr = bus_manager_get_sensact_i2c_id(&sensact->dev_id);
-    i2c_pkt_t in_pkt = {0,{0,0}, 0, 0,
+    i2c_pkt_t in_pkt = {0, {0, 0}, 0, 0,
                         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                          0}, 0};
-    i2c_pkt_t out_pkt = {0,{0,0}, 0, 0,
+    i2c_pkt_t out_pkt = {0, {0, 0}, 0, 0,
                          {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                           0}, 0};
-    out_pkt.action=SENS_ACT_WRITE;
+    out_pkt.action = SENS_ACT_WRITE;
     out_pkt.sensact_id[0] = sensact->sensact_id;
     memcpy(out_pkt.data, writeData, SENSACT_DATA_SIZE); ///BIIIIIG TODO!!!!!!
 
     I2CIntUnregister(I2C0_BASE);
     bus_manager_disable_i2c_slave();
 
-    if(!bus_manager_exchange_pkts(&out_pkt, &in_pkt, i2c_addr)){
+    if (!bus_manager_exchange_pkts(&out_pkt, &in_pkt, i2c_addr)) {
         printf("error in write sensact\n");
         board_i2c_shutdown();
         result->err = I2C_ERROR;
-    }//TODO:ERROR HANDLING!!!!
+    }//TODO:ERROR HANDLING.....CRC....!!!!
     memcpy(result->data, in_pkt.data, SENSACT_DATA_SIZE);
 
     bus_manager_register_i2c_isr(i2c_slave_data_isr);
@@ -150,21 +152,42 @@ bool bus_manager_w_sensact(sensact_descriptor_t* sensact, uint8_t* writeData, se
 
 void i2c_bus_checker() {
     //printf("in bus checker %d\n",STATE);
-    uint8_t sensactBuff, i, retvalread, retvalwrite;
+    uint8_t sensactBuff, i, j, retvalread, retvalwrite;
+    bool commError = true;
+    i2c_pkt_t in_pkt = {0, {0, 0}, 0, 0,
+                        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                         0}, 0};
+    i2c_pkt_t out_pkt = {0, {0, 0}, 0, 0,
+                         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                          0}, 0};
+    out_pkt.action = CHECK_ALIVE;
+
+
     for (i = 8; i < I2C_BUS_ADDRESS_RANGE; i++) {
         if (i2c_devices[i]) {
             //printf("%d device exsists \n",i);
-            board_i2c_select(BOARD_I2C_INTERFACE_0, i);
-            retvalwrite = board_i2c_write_single(GET_SENSACT_NUM);
-            sensactBuff = 0;
-            retvalread = board_i2c_read_single(&sensactBuff); // TODO: Check return value too.
-            if (!retvalwrite || (!sensactBuff && retvalread)) {
-                //printf("%d device deleted \n",i);
+
+            I2CIntUnregister(I2C0_BASE);
+            bus_manager_disable_i2c_slave();
+            for (j = 0; j < CHECK_ALIVE_TIMES; j++) { // Try to communicate a few times before remove.
+                if (!bus_manager_exchange_pkts(&out_pkt, &in_pkt, i)) {
+                    printf("error in bus checker\n");
+                    board_i2c_shutdown();
+                }//TODO:ERROR HANDLING.....CRC....!!!!
+                else if (in_pkt.data[0] == 1) {
+                    commError = false;
+                    break;
+                }
+            }
+            if (commError) {
+                printf("%d device deleted \n", i);
                 sam_del_device(i2c_devices[i]);
                 i2c_devices[i] = 0;
                 // TODO: unregister device from SAM and i2c_devices
             }
             board_i2c_shutdown();
+            bus_manager_register_i2c_isr(i2c_slave_data_isr);
+            bus_manager_init_i2c_slave(0x25);
         }
     }
     /* Register I2C Slave Interrupt */
@@ -191,10 +214,10 @@ void init_tru2air_sensor_node() {
     unsigned char nameBuff[23];
     unsigned char typeBuff[2];
     unsigned char sensactBuff;
-    i2c_pkt_t in_pkt = {0,{0,0}, 0, 0,
+    i2c_pkt_t in_pkt = {0, {0, 0}, 0, 0,
                         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                          0}, 0};
-    i2c_pkt_t out_pkt = {0,{0,0}, 0, 0,
+    i2c_pkt_t out_pkt = {0, {0, 0}, 0, 0,
                          {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                           0}, 0};
     /* Timing variables */

@@ -113,10 +113,9 @@ void setup() {
     Wire.requestFrom(TRU2AIR_MAIN_NODE_SLAVE_ADDR, 1,
                      true);   // true means that repeated start is sent after the request
     while (!Wire.available()) { //
-        /*Serial.println("4");
-          delay(250);
-          resetTimer++;
-          if(resetTimer > 4) break;*/
+        Serial.println("4");
+          delay(10);
+          if(resetTimer++ > 150) break;
     }
     I2C_SLAVE_ADDRESS = Wire.read(); // receive a byte as characterl //this read will be a Repeated start becouse of the Wire.requestFrom's true argument!!!!!
 
@@ -134,8 +133,8 @@ int resCntr = 0;
 
 void loop() {
     //if(resetVal) {Serial.println("Should reset??");resetVal = 0; delay(10);setup();};
-    //delay(10);
-    //if(resCntr++ > 50) {Serial.println("Should reset by rescntr??");resCntr = 0; setup();}
+    delay(10);
+    if(resCntr++ > 150) {Serial.println("Should reset by rescntr??");resCntr = 0; setup();}
     //Serial.println(resCntr);
 }
 
@@ -170,6 +169,9 @@ void receiveCb(int numBytes) {
             break;
         case SENS_ACT_READ:
             STATE = SENS_ACT_READ;
+            break;
+        case CHECK_ALIVE:
+            STATE = CHECK_ALIVE;
             break;
         default:
             Serial.print("[ERROR] Invalid state receieved! -> ");
@@ -258,7 +260,11 @@ void requestCb() {
             }
 
             break;
-
+        case CHECK_ALIVE:
+            resetTimer = 0;
+            pkt.data[0] = 1;
+            Serial.println("CHECKALIVE");
+            break;
         default:
             break;
     }

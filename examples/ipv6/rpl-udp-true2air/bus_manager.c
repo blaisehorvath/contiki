@@ -47,7 +47,7 @@ uint8_t bus_manager_register_i2c_device(uint32_t dev_addr) {
 }
 
 //TODO: maybe remove by dev addr?
-void bus_manager_unregister_i2c_device (uint8_t i2c_addr) {
+void bus_manager_unregister_i2c_device (uint8_t i2c_addr) { //TODO: This is never called... Should be when dev is unplugged...
 	i2c_devices[i2c_addr] = 0;
 }
 
