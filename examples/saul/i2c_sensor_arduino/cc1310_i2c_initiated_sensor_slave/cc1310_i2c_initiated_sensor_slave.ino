@@ -98,7 +98,8 @@ int resetVal = 0;
 
 void setup() {
 //TODO: when prints removed it doesnt reset?? Why??
-    Serial.begin(9600);  // start serial for output
+    pinMode(LED_BUILTIN, OUTPUT);
+    Serial.begin(115200);  // start serial for output
     Serial.println(sizeof(i2c_pkt_t));
     Wire.begin(); // join i2c bus (address optional for master)
     // Starting the tru2air i2c protocol
@@ -127,7 +128,9 @@ void setup() {
     printHex4(&I2C_SLAVE_ADDRESS);
     Serial.print("\n");
 }
+
 int resCntr = 0;
+
 void loop() {
     //if(resetVal) {Serial.println("Should reset??");resetVal = 0; delay(10);setup();};
     //delay(10);
@@ -166,11 +169,14 @@ void receiveCb(int numBytes) {
             break;
         case SENS_ACT_READ:
             STATE = SENS_ACT_READ;
+            break;
         default:
             Serial.print("[ERROR] Invalid state receieved! -> ");
             break;
     }
 }
+
+int asdasd = 0;
 
 void requestCb() {
     resCntr = 0;
@@ -191,16 +197,23 @@ void requestCb() {
 
         case GET_SENSOR_NAME:
             //TODO: handle bad HEADER
-            for(i = 0; i < sizeof(sensors[HEADER.specifier].name); i++) pkt.data[i] = sensors[lastReceivedPkt.data[0]].name[i];
+            for (i = 0; i < sizeof(sensors[HEADER.specifier].name); i++)
+                pkt.data[i] = sensors[lastReceivedPkt.data[0]].name[i];
             break;
 
         case GET_SENSOR_TYPE:
             Serial.println("get sensor type");
-            for(i = 0; i < 2; i++) pkt.data[i] = ((uint8_t*)( &sensors[lastReceivedPkt.data[0]].type))[i];
+            for (i = 0; i < 2; i++) pkt.data[i] = ((uint8_t * )(&sensors[lastReceivedPkt.data[0]].type))[i];
             //Wire.write((char *) (&sensors[HEADER.specifier].type), 2);
             resetVal = 1;
             break;
         case SENS_ACT_WRITE:
+            switch (pkt.data[0]){
+                case 0:
+                    digitalWrite(LED_BUILTIN, pkt.data[1]); // TODO: We need another field to address the right sensor when writing....
+                default:
+                    break;
+            }
             break;
         case SENS_ACT_READ:
 
@@ -208,38 +221,39 @@ void requestCb() {
             char BEresultArr[4];
             memset(SENSACT_MEASURE_RESULT, 0x00, SENSACT_DATA_SIZE);
 
-            switch (HEADER.specifier) {
-
-                /*
-
-                //pressure
+            switch (pkt.data[0]) {
                 case 0:
-                  measurement = bme.readPressure();
-                  convertLEFloatToBE(&measurement, BEresultArr);
+                    pkt.data[0] = asdasd++ % 2;
+                    /*
 
-                  memcpy(SENSACT_MEASURE_RESULT, BEresultArr, sizeof(float));
-                  Wire.write((char*)&SENSACT_MEASURE_RESULT, SENSACT_DATA_SIZE);
-                  break;
-                //temp
-                case 1:
-                  measurement = bme.readTemperature();
-                  convertLEFloatToBE(&measurement, BEresultArr);
+                    //pressure
+                    case 0:
+                      measurement = bme.readPressure();
+                      convertLEFloatToBE(&measurement, BEresultArr);
 
-                  memcpy(SENSACT_MEASURE_RESULT, BEresultArr, sizeof(float));
-                  Wire.write((char*)&SENSACT_MEASURE_RESULT, SENSACT_DATA_SIZE);
-                  break;
-                //hum
-                case 2:
-                  measurement = bme.readHumidity();
-                  convertLEFloatToBE(&measurement, BEresultArr);
+                      memcpy(SENSACT_MEASURE_RESULT, BEresultArr, sizeof(float));
+                      Wire.write((char*)&SENSACT_MEASURE_RESULT, SENSACT_DATA_SIZE);
+                      break;
+                    //temp
+                    case 1:
+                      measurement = bme.readTemperature();
+                      convertLEFloatToBE(&measurement, BEresultArr);
 
-                  memcpy(SENSACT_MEASURE_RESULT, BEresultArr, sizeof(float));
-                  Wire.write((char*)&SENSACT_MEASURE_RESULT, SENSACT_DATA_SIZE);
-                  break;
+                      memcpy(SENSACT_MEASURE_RESULT, BEresultArr, sizeof(float));
+                      Wire.write((char*)&SENSACT_MEASURE_RESULT, SENSACT_DATA_SIZE);
+                      break;
+                    //hum
+                    case 2:
+                      measurement = bme.readHumidity();
+                      convertLEFloatToBE(&measurement, BEresultArr);
 
-                default:
-                  ;
-                  */
+                      memcpy(SENSACT_MEASURE_RESULT, BEresultArr, sizeof(float));
+                      Wire.write((char*)&SENSACT_MEASURE_RESULT, SENSACT_DATA_SIZE);
+                      break;
+
+                    default:
+                      ;
+                      */
             }
 
             break;

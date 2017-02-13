@@ -125,6 +125,7 @@ int node_pkt_reply(rfnode_pkt *pkt_in, rfnode_pkt *pkt_out) {
 
             if (result.err == NO_SENSACT_ERROR) {
                 sprintf(pkt_out->name, device_list[pkt_in->cnt].name);
+                //printf("no error in i2c\n"); printf("array: ["); for(i = 0; i< SENSACT_DATA_SIZE;i++) printf("%d,", result.data[i]); printf("}\n");
                 memcpy(pkt_out->data, result.data, SENSACT_DATA_SIZE);
             }
             else {
