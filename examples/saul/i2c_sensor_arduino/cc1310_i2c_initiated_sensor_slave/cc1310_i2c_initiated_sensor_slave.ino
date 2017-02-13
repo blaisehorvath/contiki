@@ -49,6 +49,7 @@ typedef struct tru2air_sensor_node_t {
 
 typedef struct i2c_pkt_t {
     uint32_t dev_id;
+    uint8_t sensact_id[4];
     uint8_t action;
     uint8_t error;
     unsigned char data[32];
@@ -146,9 +147,9 @@ void receiveCb(int numBytes) {
     for (i = 0; i < numBytes; i++) receivedData[i] = Wire.read();
     pkt = (i2c_pkt_t *) receivedData;
     printI2CPkt(pkt);
-    /*if (pkt->CRC == crc16((uint8_t *) pkt, sizeof(i2c_pkt_t) - sizeof(uint16_t)))
+    if (pkt->CRC == crc16((uint8_t *) pkt, sizeof(i2c_pkt_t) - sizeof(uint16_t)))
         Serial.println("Good pkt");
-    else Serial.println("Bad pkt"); //TODO: Check device ID TOO!!*/
+    else Serial.println("Bad pkt"); //TODO: Check device ID TOO!!
     lastReceivedPkt = *pkt;
     switch (pkt->action) {
         case GET_SENSACT_NUM:
@@ -208,9 +209,9 @@ void requestCb() {
             resetVal = 1;
             break;
         case SENS_ACT_WRITE:
-            switch (pkt.data[0]){
+            switch (pkt.sensact_id[0]){
                 case 0:
-                    digitalWrite(LED_BUILTIN, pkt.data[1]); // TODO: We need another field to address the right sensor when writing....
+                    digitalWrite(LED_BUILTIN, pkt.data[0]); // TODO: We need another field to address the right sensor when writing....
                 default:
                     break;
             }
@@ -221,7 +222,7 @@ void requestCb() {
             char BEresultArr[4];
             memset(SENSACT_MEASURE_RESULT, 0x00, SENSACT_DATA_SIZE);
 
-            switch (pkt.data[0]) {
+            switch (pkt.sensact_id[0]) {
                 case 0:
                     pkt.data[0] = asdasd++ % 2;
                     /*

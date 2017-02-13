@@ -59,6 +59,7 @@ typedef struct tru2air_sensor_node_t {
 // buffer in Wire.h should be set accordingly, default is 32... both in wire and twi.
 typedef struct i2c_pkt_t {
 	uint32_t dev_id;
+	uint8_t sensact_id [4];
 	enum TRU2AIR_I2C_HEADER_ACTION action;
 	enum TRU2AIR_I2C_ERROR error;
 	unsigned char data[32];

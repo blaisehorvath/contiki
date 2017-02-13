@@ -91,14 +91,14 @@ bool bus_manager_r_sensact(sensact_descriptor_t* sensact, sensact_rw_result_t* r
     printf("Reading sensact!!!\n");
     result->err = NO_SENSACT_ERROR;
     uint8_t i2c_addr = bus_manager_get_sensact_i2c_id(&sensact->dev_id);
-    i2c_pkt_t in_pkt = {0, 0, 0,
+    i2c_pkt_t in_pkt = {0,{0,0}, 0, 0,
                         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                          0}, 0};
-    i2c_pkt_t out_pkt = {0, 0, 0,
+    i2c_pkt_t out_pkt = {0,{0,0}, 0, 0,
                          {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                           0}, 0};
     out_pkt.action=SENS_ACT_READ;
-    out_pkt.data[0] = sensact->sensact_id;
+    out_pkt.sensact_id[0] = sensact->sensact_id;
 
     I2CIntUnregister(I2C0_BASE);
     bus_manager_disable_i2c_slave();
@@ -120,15 +120,15 @@ bool bus_manager_w_sensact(sensact_descriptor_t* sensact, uint8_t* writeData, se
     printf("Writing sensact!!!\n");
     result->err = NO_SENSACT_ERROR;
     uint8_t i2c_addr = bus_manager_get_sensact_i2c_id(&sensact->dev_id);
-    i2c_pkt_t in_pkt = {0, 0, 0,
+    i2c_pkt_t in_pkt = {0,{0,0}, 0, 0,
                         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                          0}, 0};
-    i2c_pkt_t out_pkt = {0, 0, 0,
+    i2c_pkt_t out_pkt = {0,{0,0}, 0, 0,
                          {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                           0}, 0};
     out_pkt.action=SENS_ACT_WRITE;
-    out_pkt.data[0] = sensact->sensact_id;
-    memcpy(out_pkt.data+1, writeData, SENSACT_DATA_SIZE-1); ///BIIIIIG TODO!!!!!!
+    out_pkt.sensact_id[0] = sensact->sensact_id;
+    memcpy(out_pkt.data, writeData, SENSACT_DATA_SIZE); ///BIIIIIG TODO!!!!!!
 
     I2CIntUnregister(I2C0_BASE);
     bus_manager_disable_i2c_slave();
@@ -191,10 +191,10 @@ void init_tru2air_sensor_node() {
     unsigned char nameBuff[23];
     unsigned char typeBuff[2];
     unsigned char sensactBuff;
-    i2c_pkt_t in_pkt = {0, 0, 0,
+    i2c_pkt_t in_pkt = {0,{0,0}, 0, 0,
                         {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                          0}, 0};
-    i2c_pkt_t out_pkt = {0, 0, 0,
+    i2c_pkt_t out_pkt = {0,{0,0}, 0, 0,
                          {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                           0}, 0};
     /* Timing variables */
@@ -216,6 +216,7 @@ void init_tru2air_sensor_node() {
                 break;
 
             case (NODE_I2C_MASTER_INIT):
+                printf("sizeof pkt:%d\n", sizeof(i2c_pkt_t));
                 //printf("[STATE] -> NODE_I2C_MASTER_INIT\n");
 
                 if (DEVICE.i2c_addr) {
