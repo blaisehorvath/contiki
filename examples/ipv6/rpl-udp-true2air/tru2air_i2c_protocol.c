@@ -309,6 +309,7 @@ void init_tru2air_sensor_node() {
                 new_sensact.write = bus_manager_w_sensact;
                 new_sensact.sensact_type = *((uint16_t *) typeBuff);
 
+                sam_del_device(new_sensact.dev_id); //Clearing it out just to be sure TODO: A better way??
                 sam_add_sensact(new_sensact);
 
                 testGood++;
