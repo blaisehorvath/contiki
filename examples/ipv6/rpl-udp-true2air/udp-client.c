@@ -313,7 +313,7 @@ etimer_set(&i2cCheck, I2C_CHECK_INTERVAL);
 #endif
 
   printf("[STATUS] listening to UDP communication\n");
-
+send_init_packet(0);
   while(1) {
 
     PROCESS_WAIT_EVENT();
