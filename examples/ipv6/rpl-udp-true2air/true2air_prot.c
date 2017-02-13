@@ -177,7 +177,9 @@ int node_pkt_reply(rfnode_pkt *pkt_in, rfnode_pkt *pkt_out) {
 int node_is_initialized() {
     return device_initialized;
 }
-
+void node_reInit(){
+    device_initialized = 0;
+}
 void node_init_pkt(rfnode_pkt *pkt_out) {
     pkt_out->msg = SET_IPADDR;
 }

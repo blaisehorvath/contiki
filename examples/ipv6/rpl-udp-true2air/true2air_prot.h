@@ -63,4 +63,5 @@ void node_init_pkt(rfnode_pkt* pkt_out);
 void print_pkt(rfnode_pkt* pkt,uip_ip6addr_t* addr);
 void print_pkt_bin(rfnode_pkt* pkt,uip_ip6addr_t* addr);
 void print_pkt_without_addr(rfnode_pkt* pkt);
+void node_reInit();
 #endif /* EXAMPLES_IPV6_RPL_UDP_TRUE2AIR_TRUE2AIR_PROT_H_ */

@@ -10,6 +10,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include "tru2air_i2c_protocol.h"
+#include "true2air_prot.h"
 #include "bus_manager.h"
 #include "SAM.h"
 #include "clock.h"
@@ -183,6 +184,7 @@ void i2c_bus_checker() {
                 printf("%d device deleted \n", i);
                 sam_del_device(i2c_devices[i]);
                 i2c_devices[i] = 0;
+                node_reInit();
                 // TODO: unregister device from SAM and i2c_devices
             }
             board_i2c_shutdown();
@@ -345,6 +347,8 @@ void init_tru2air_sensor_node() {
                 } else {
                     STATE = REQUIRE_SENSACT_NAME;
                 }
+
+                node_reInit();
                 break;
             case (I2C_ERROR):
 
