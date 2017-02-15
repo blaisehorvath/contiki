@@ -92,7 +92,9 @@ typedef struct sensact_descriptor_t {
 byte SENS_NUM = 0x03;
 int resetTimer = 0;
 unsigned int uint32_answer = 15;
-sensact_descriptor_t sensors[] = {{"TRU2AIR_RELAY", SENSACT_TRU2AIR_RELAY}};
+sensact_descriptor_t sensors[] = {{"BME280_PRESSURE", SENSACT_BME280_PRESSURE},
+                                  {"BME280_TEMP",     SENSACT_BME280_TEMP},
+                                  {"BME280_HUM",      SENSACT_BME280_HUMIDITY}};
 unsigned char device_addr[] = {0xde, 0xad, 0xbe, 0xef};
 i2c_pkt_t lastReceivedPkt;
 int resetVal = 0;
@@ -101,6 +103,10 @@ void setup() {
 //TODO: when prints removed it doesnt reset?? Why??
     pinMode(LED_BUILTIN, OUTPUT);
     Serial.begin(115200);  // start serial for output
+    if (!bme.begin()) {
+        Serial.println("Could not find a valid BME280 sensor, check wiring!");
+        while (1);
+    }
     Serial.println(sizeof(i2c_pkt_t));
     Wire.begin(); // join i2c bus (address optional for master)
     // Starting the tru2air i2c protocol
@@ -114,8 +120,8 @@ void setup() {
                      true);   // true means that repeated start is sent after the request
     while (!Wire.available()) { //
         Serial.println("4");
-          delay(10);
-          if(resetTimer++ > 150) break;
+        delay(10);
+        if (resetTimer++ > 150) break;
     }
     I2C_SLAVE_ADDRESS = Wire.read(); // receive a byte as characterl //this read will be a Repeated start becouse of the Wire.requestFrom's true argument!!!!!
 
@@ -134,7 +140,11 @@ int resCntr = 0;
 void loop() {
     //if(resetVal) {Serial.println("Should reset??");resetVal = 0; delay(10);setup();};
     delay(10);
-    if(resCntr++ > 150) {Serial.println("Should reset by rescntr??");resCntr = 0; setup();}
+    if (resCntr++ > 150) {
+        Serial.println("Should reset by rescntr??");
+        resCntr = 0;
+        setup();
+    }
     //Serial.println(resCntr);
 }
 
@@ -192,7 +202,7 @@ void requestCb() {
     //delay(200);
     //setup();
 
-    switch (STATE) {
+    switch (STATE) { //TODO: get it from last pkt.
         case GET_SENSACT_NUM:
             pkt.data[0] = sizeof(sensors) / sizeof(sensact_descriptor_t);
             //Wire.write(sizeof(sensors) / sizeof(sensact_descriptor_t));
@@ -211,54 +221,41 @@ void requestCb() {
             resetVal = 1;
             break;
         case SENS_ACT_WRITE:
-            switch (pkt.sensact_id[0]){
-                case 0:
-                    digitalWrite(LED_BUILTIN, pkt.data[0]); // TODO: We need another field to address the right sensor when writing....
-                default:
-                    break;
-            }
+            Serial.println("UNACCEPTABLEE");
             break;
         case SENS_ACT_READ:
-
+            Serial.println("Read");
             float measurement;
             char BEresultArr[4];
             memset(SENSACT_MEASURE_RESULT, 0x00, SENSACT_DATA_SIZE);
 
             switch (pkt.sensact_id[0]) {
+                //pressure
                 case 0:
-                    pkt.data[0] = asdasd++ % 2;
-                    /*
+                    Serial.println("pres");
+                    measurement = bme.readPressure();
+                    convertLEFloatToBE(&measurement, BEresultArr);
 
-                    //pressure
-                    case 0:
-                      measurement = bme.readPressure();
-                      convertLEFloatToBE(&measurement, BEresultArr);
-
-                      memcpy(SENSACT_MEASURE_RESULT, BEresultArr, sizeof(float));
-                      Wire.write((char*)&SENSACT_MEASURE_RESULT, SENSACT_DATA_SIZE);
-                      break;
+                    memcpy(&pkt.data[0], BEresultArr, sizeof(float));
+                    break;
                     //temp
-                    case 1:
-                      measurement = bme.readTemperature();
-                      convertLEFloatToBE(&measurement, BEresultArr);
-
-                      memcpy(SENSACT_MEASURE_RESULT, BEresultArr, sizeof(float));
-                      Wire.write((char*)&SENSACT_MEASURE_RESULT, SENSACT_DATA_SIZE);
-                      break;
+                case 1:
+                    Serial.println("temp");
+                    measurement = bme.readTemperature();
+                    convertLEFloatToBE(&measurement, BEresultArr);
+                    memcpy(&pkt.data[0], BEresultArr, sizeof(float));
+                    break;
                     //hum
-                    case 2:
-                      measurement = bme.readHumidity();
-                      convertLEFloatToBE(&measurement, BEresultArr);
+                case 2:
+                    Serial.println("hum");
+                    measurement = bme.readHumidity();
+                    convertLEFloatToBE(&measurement, BEresultArr);
 
-                      memcpy(SENSACT_MEASURE_RESULT, BEresultArr, sizeof(float));
-                      Wire.write((char*)&SENSACT_MEASURE_RESULT, SENSACT_DATA_SIZE);
-                      break;
+                    memcpy(&pkt.data[0], BEresultArr, sizeof(float));
+                    break;
 
-                    default:
-                      ;
-                      */
+                default:;
             }
-
             break;
         case CHECK_ALIVE:
             resetTimer = 0;

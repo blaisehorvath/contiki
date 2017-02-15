@@ -211,6 +211,7 @@ volatile int testGood = 0;
 
 void init_tru2air_sensor_node() {
     int i;
+    bool firstSensor = true;
     bool tru2air_sensor_device_inited = false;
     unsigned char headerBuff[2];
     unsigned char nameBuff[23];
@@ -226,7 +227,7 @@ void init_tru2air_sensor_node() {
     while (!tru2air_sensor_device_inited) {
         switch (STATE) {
             case (I2C_SLAVE_LISTEN):
-
+                firstSensor = true;
                 /* Reseting DEVICE */
                 DEVICE = (tru2air_sensor_node_t) {0, 0, 0};
 
@@ -241,10 +242,16 @@ void init_tru2air_sensor_node() {
                 break;
 
             case (NODE_I2C_MASTER_INIT):
+
                 printf("sizeof pkt:%d\n", sizeof(i2c_pkt_t));
                 //printf("[STATE] -> NODE_I2C_MASTER_INIT\n");
 
                 if (DEVICE.i2c_addr) {
+                    if(firstSensor){
+                        firstSensor = false;
+                        sam_del_device(DEVICE.dev_addr); //Clearing it out just to be sure TODO: A better way??
+                        //This isn't good!
+                    }
                     I2CIntUnregister(I2C0_BASE);
                     bus_manager_disable_i2c_slave();
                     //printf("[INFO] disabling i2c slave \n");
@@ -334,7 +341,6 @@ void init_tru2air_sensor_node() {
                 new_sensact.write = bus_manager_w_sensact;
                 new_sensact.sensact_type = *((uint16_t *) typeBuff);
 
-                sam_del_device(new_sensact.dev_id); //Clearing it out just to be sure TODO: A better way??
                 sam_add_sensact(new_sensact);
 
                 testGood++;

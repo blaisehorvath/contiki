@@ -328,8 +328,8 @@ send_init_packet(0);
         ctimer_set(&i2cfasz, I2C_WAIT_INTERVAL,init_tru2air_sensor_node, NULL);
     }
     if(etimer_expired(&i2cCheck)){
-    i2c_bus_checker();
-    etimer_reset(&i2cCheck);
+        i2c_bus_checker();
+        etimer_reset(&i2cCheck);
     }
 #ifndef SIMULATED
 //    if(etimer_expired(&led_off)){
